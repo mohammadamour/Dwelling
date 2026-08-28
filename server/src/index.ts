@@ -3,9 +3,10 @@ dotenv.config();
 import express = require('express');
 import cors = require('cors');
 import { PrismaClient } from '@prisma/client';
-import propertyRoutes = require('./routes/properties');
+import propertyRoutes = require('./routes/propertyRoutes');
 import statsRoutes = require('./routes/stats');
 import authRoutes = require('./routes/auth');
+import userRoutes = require('./routes/userRoutes');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -24,10 +25,16 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Root health check
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'Dwelling API is running' });
+});
+
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api', statsRoutes);
+app.use('/api/auth', authRoutes as express.Router);
+app.use('/api/users', userRoutes as express.Router);
+app.use('/api/properties', propertyRoutes as express.Router);
+app.use('/api', statsRoutes as express.Router);
 
 /**
  * POST /api/newsletter
