@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Dwelling — Discover beautiful homes in incredible locations. A next-generation platform connecting renters, homeowners, and trusted real-estate agents." />
+    <meta name="theme-color" content="#0F172A" />
+    <title>Dwelling — Find Your Dream Home</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <!-- =========================================================
+         HEADER / NAV
+    ========================================================== -->
+    <header class="site-header" id="top">
+      <nav class="nav container" aria-label="Primary">
+        <a href="#top" class="brand" aria-label="Dwelling — Home">
+          <img src="images/icons/logo.svg" alt="" aria-hidden="true" />
+          <span>Dwelling</span>
+        </a>
+
+        <ul class="nav-links" role="list">
+          <li><a href="#top" class="nav-link" aria-current="page">Home</a></li>
+          <li><a href="#about" class="nav-link">About Us</a></li>
+          <li><a href="#properties" class="nav-link">Renters</a></li>
+          <li><a href="#features" class="nav-link">Homeowners</a></li>
+          <li><a href="#testimonials" class="nav-link">Reviews</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <a href="#cta" class="btn btn--primary">
+            <span>Register</span>
+          </a>
+        </div>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-drawer"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </nav>
+
+      <!-- Mobile drawer -->
+      <div
+        class="mobile-drawer"
+        id="mobile-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        aria-hidden="true"
+      >
+        <div class="mobile-drawer__backdrop" data-close-drawer></div>
+        <div class="mobile-drawer__panel">
+          <div class="mobile-drawer__header">
+            <a href="#top" class="brand" aria-label="Dwelling — Home">
+              <img src="images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <button
+              type="button"
+              class="nav-toggle nav-toggle--close"
+              aria-label="Close navigation menu"
+              data-close-drawer
+            >
+              <img src="images/icons/close.svg" alt="" aria-hidden="true" />
+            </button>
+          </div>
+          <ul class="mobile-drawer__links" role="list">
+            <li><a href="#top" class="nav-link" data-close-drawer>Home</a></li>
+            <li><a href="#about" class="nav-link" data-close-drawer>About Us</a></li>
+            <li><a href="#properties" class="nav-link" data-close-drawer>Renters</a></li>
+            <li><a href="#features" class="nav-link" data-close-drawer>Homeowners</a></li>
+            <li><a href="#testimonials" class="nav-link" data-close-drawer>Reviews</a></li>
+          </ul>
+          <a href="#cta" class="btn btn--primary btn--full" data-close-drawer>
+            <span>Register</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ============== HERO ============== -->
+      <section class="hero container">
+        <div class="hero__content reveal">
+          <span class="eyebrow">
+            <span class="eyebrow__dot"></span>
+            Trusted by 20,000+ clients worldwide
+          </span>
+          <h1 class="hero__title">
+            Home is where your <span class="text-accent">story</span> begins.
+          </h1>
+          <p class="hero__sub">
+            A next-generation collaborative platform connecting renters,
+            homeowners, and verified agents. Live the way you want — beautiful
+            homes, incredible locations, pricing that makes sense.
+          </p>
+
+          <form class="search-card" role="search" onsubmit="event.preventDefault()">
+            <div class="search-field">
+              <label for="location" class="visually-hidden">Where are you moving?</label>
+              <svg class="search-field__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2"/>
+                <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <input id="location" type="text" placeholder="City, neighborhood, or ZIP" />
+            </div>
+
+            <div class="search-divider" aria-hidden="true"></div>
+
+            <div class="search-field">
+              <label for="hometype" class="visually-hidden">What type of home?</label>
+              <svg class="search-field__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 10.5 12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 9.5V21h14V9.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              <input id="hometype" type="text" placeholder="Home type — House, Apt, Condo" />
+            </div>
+
+            <button type="submit" class="btn btn--accent search-card__cta">
+              <span>Find a home</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </form>
+
+          <div class="hero__stats">
+            <div>
+              <strong class="counter" data-stat="listingsAddedWeekly" data-suffix="+">0</strong><span data-stat-suffix="listingsAddedWeekly">+</span>
+              <p>Listings added weekly</p>
+            </div>
+            <div>
+              <strong class="counter" data-stat="clientSatisfaction" data-suffix="%" data-float="true">0</strong><span data-stat-suffix="clientSatisfaction">%</span>
+              <p>Client satisfaction</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__gallery reveal reveal--delay">
+          <div class="gallery-grid">
+            <div class="gallery-grid__item gallery-grid__item--1">
+              <img src="images/top first img.png" alt="Bright living room with modern furnishings" loading="eager" decoding="async" />
+            </div>
+            <div class="gallery-grid__item gallery-grid__item--2">
+              <img src="images/top sec img.png" alt="Cozy bedroom with natural lighting" loading="lazy" decoding="async" />
+            </div>
+            <div class="gallery-grid__item gallery-grid__item--3">
+              <img src="images/top third img.png" alt="Minimalist kitchen space" loading="lazy" decoding="async" />
+              <div class="gallery-badge">
+                <span class="gallery-badge__dot"></span>
+                Live tour available
+              </div>
+            </div>
+            <div class="gallery-grid__item gallery-grid__item--4">
+              <img src="images/top fourth img.png" alt="Contemporary bathroom design" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <main id="main">
+      <!-- =========================================================
+           SECTION 2 — TRUSTED / STATS
+      ========================================================== -->
+      <section class="stats reveal">
+        <div class="container stats__inner">
+          <div class="stats__copy">
+            <h2>Trusted by people <span class="text-accent-soft">across the globe.</span></h2>
+            <p>
+              From first-time renters to growing families making their biggest
+              purchase, Dwelling is built for every stage of the journey. No
+              matter what chapter you're in, having the right people beside you
+              makes all the difference.
+            </p>
+          </div>
+
+          <ul class="stats__grid" role="list">
+            <li class="stat">
+              <p class="stat__num" data-stat="totalListings" data-prefix="+" data-suffix="">
+                <span class="counter">0</span>
+              </p>
+              <p class="stat__label">Active listings</p>
+            </li>
+            <li class="stat">
+              <p class="stat__num" data-stat="totalAgents" data-suffix="+">
+                <span class="counter">0</span><span class="counter-suffix"></span>
+              </p>
+              <p class="stat__label">Trusted agents</p>
+            </li>
+            <li class="stat">
+              <p class="stat__num" data-stat="totalCities" data-suffix="+">
+                <span class="counter">0</span><span class="counter-suffix"></span>
+              </p>
+              <p class="stat__label">Cities served</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SECTION 3 — ABOUT / AGENT
+      ========================================================== -->
+      <section id="about" class="about container reveal">
+        <div class="about__media">
+          <div class="about__img">
+            <img
+              src="images/third page img.png"
+              alt="Modern suburban home with landscaped front yard"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+
+          <aside class="agent-card" aria-label="Featured agent">
+            <img
+              src="images/person white.png"
+              alt="Portrait of David Warner, Property Agent"
+              class="agent-card__avatar"
+              loading="lazy"
+              decoding="async"
+            />
+            <p class="agent-card__name">David Warner</p>
+            <p class="agent-card__role">Property Agent &middot; 12 yrs exp.</p>
+            <div class="agent-card__rating" aria-label="Rated 4.9 out of 5 stars">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+              <span>4.9</span>
+            </div>
+            <button type="button" class="btn btn--primary btn--sm agent-card__btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              <span>Message</span>
+            </button>
+          </aside>
+        </div>
+
+        <div class="about__content">
+          <span class="eyebrow eyebrow--dark">
+            <span class="eyebrow__dot"></span>
+            About Dwelling
+          </span>
+          <h2>Providing effective solutions for <span class="text-primary">every home seeker.</span></h2>
+          <p class="about__lead">
+            We cut through the noise of endless listings and endless paperwork.
+            Dwelling combines verified listings, on-demand expert advice, and
+            transparent pricing so you can make decisions you're confident in.
+          </p>
+
+          <ul class="feature-list" role="list">
+            <li>
+              <span class="check-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <strong>Verified listings only</strong>
+                <p>Every property is inspected and validated by our team.</p>
+              </div>
+            </li>
+            <li>
+              <span class="check-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <strong>Personalized agent support</strong>
+                <p>Work one-on-one with an expert who knows your market.</p>
+              </div>
+            </li>
+            <li>
+              <span class="check-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+              <div>
+                <strong>Transparent fees, every time</strong>
+                <p>No hidden commissions. No last-minute surprises.</p>
+              </div>
+            </li>
+          </ul>
+
+          <a href="#features" class="btn btn--accent">
+            <span>More About Us</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SECTION 4 — POPULAR PROPERTIES
+      ========================================================== -->
+      <section id="properties" class="properties reveal">
+        <div class="container">
+          <header class="section-header">
+            <span class="eyebrow eyebrow--dark">
+              <span class="eyebrow__dot"></span>
+              Popular right now
+            </span>
+            <div class="section-header__row">
+              <h2>Handpicked properties for <span class="text-primary">every lifestyle.</span></h2>
+              <p>
+                From cozy urban studios to spacious family homes, explore the
+                listings our community is touring most this month.
+              </p>
+            </div>
+          </header>
+
+          <ul class="property-grid" role="list" id="propertyGrid">
+            <!-- Loading state (shown until API responds) -->
+            <li class="property-card property-card--skeleton" aria-hidden="true">
+              <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+              <div class="property-card__body">
+                <div class="skeleton skeleton--line" style="width:50%"></div>
+                <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+                <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+              </div>
+            </li>
+            <li class="property-card property-card--skeleton" aria-hidden="true">
+              <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+              <div class="property-card__body">
+                <div class="skeleton skeleton--line" style="width:50%"></div>
+                <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+                <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+              </div>
+            </li>
+            <li class="property-card property-card--skeleton" aria-hidden="true">
+              <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+              <div class="property-card__body">
+                <div class="skeleton skeleton--line" style="width:50%"></div>
+                <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+                <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+              </div>
+            </li>
+          </ul>
+          <p class="property-empty" id="propertyEmpty" hidden>No properties match your search. Try broadening your filters!</p>
+
+          <div class="properties__cta">
+            <a href="#" class="btn btn--accent">
+              <span>Browse all properties</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SECTION 5 — FEATURES + VIDEO
+      ========================================================== -->
+      <section id="features" class="features reveal">
+        <div class="container">
+          <header class="section-header section-header--center">
+            <span class="eyebrow eyebrow--dark">
+              <span class="eyebrow__dot"></span>
+              Why Dwelling
+            </span>
+            <div class="section-header__row">
+              <h2>Everything you need, <span class="text-primary">built in.</span></h2>
+              <p class="section-header__narrow">
+                A full toolkit for every step of the journey — so you can focus
+                on the home, not the hassle.
+              </p>
+            </div>
+          </header>
+
+          <ul class="feature-grid" role="list">
+            <li class="feature-tile">
+              <div class="feature-tile__icon feature-tile__icon--primary">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 10.5 12 3l9 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 9.5V21h14V9.5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M10 21v-6h4v6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h3>Verified Listings</h3>
+              <p>Every home is inspected, photographed, and price-checked before it goes live.</p>
+            </li>
+            <li class="feature-tile">
+              <div class="feature-tile__icon feature-tile__icon--accent">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+                  <path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3>Expert Agents</h3>
+              <p>Connect with local agents vetted for experience, communication, and results.</p>
+            </li>
+            <li class="feature-tile">
+              <div class="feature-tile__icon feature-tile__icon--emerald">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 2v10M5.6 9.6a9 9 0 1 0 12.8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <h3>Instant Tours</h3>
+              <p>Book in-person or virtual walkthroughs in seconds — no back-and-forth emails.</p>
+            </li>
+            <li class="feature-tile">
+              <div class="feature-tile__icon feature-tile__icon--violet">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M3 10h18" stroke="currentColor" stroke-width="2"/>
+                  <path d="M7 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <h3>Smart Contracts</h3>
+              <p>E-sign leases and offers securely, with every document stored and searchable.</p>
+            </li>
+          </ul>
+
+          <!-- Video -->
+          <figure class="video-block">
+            <img
+              src="images/video image.png"
+              alt="Home tour video thumbnail — showing a furnished open-concept living room"
+              loading="lazy"
+              decoding="async"
+            />
+            <button type="button" class="video-block__play" aria-label="Play home tour video">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+            <figcaption class="video-block__caption">
+              <strong>Take the tour</strong>
+              <span>2:14 &middot; See how Dwelling works end-to-end</span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SECTION 6 — TESTIMONIALS + SPONSORS
+      ========================================================== -->
+      <section id="testimonials" class="testimonials reveal">
+        <div class="container testimonials__inner">
+          <header class="testimonials__header">
+            <span class="eyebrow">
+              <span class="eyebrow__dot eyebrow__dot--accent"></span>
+              Client stories
+            </span>
+            <h2>What our clients <span class="text-accent-soft">have to say.</span></h2>
+          </header>
+
+          <figure class="quote-card">
+            <img class="quote-card__mark" src="images/icons/quotation.svg" alt="" aria-hidden="true" />
+            <blockquote>
+              <p>
+                I love Dwelling! They make it super easy and safe to find a
+                room for rent. Customer service is very quick and helpful.
+                Highly recommend this platform — really a great, wonderful way
+                to find rooms and houses in no time at all.
+              </p>
+            </blockquote>
+            <figcaption class="quote-card__profile">
+              <img
+                src="images/person white.png"
+                alt="Portrait of Joe Root, UI/UX Designer and Dwelling client"
+                loading="lazy"
+                decoding="async"
+              />
+              <div>
+                <p class="quote-card__name">Joe Root</p>
+                <p class="quote-card__role">UI/UX Designer &middot; Moved to Banani</p>
+              </div>
+            </figcaption>
+          </figure>
+
+          <!-- Sponsor marquee -->
+          <div class="marquee" aria-label="Featured in and trusted by">
+            <div class="marquee__track">
+              <img src="images/icons/nerd.png" alt="NerdWallet" loading="lazy" decoding="async" />
+              <img src="images/icons/indeed.png" alt="Indeed" loading="lazy" decoding="async" />
+              <img src="images/icons/richfood.png" alt="Richfood" loading="lazy" decoding="async" />
+              <img src="images/icons/netflex.png" alt="Netflex" loading="lazy" decoding="async" />
+              <img src="images/icons/shin.png" alt="Shin" loading="lazy" decoding="async" />
+              <!-- Duplicate for seamless loop -->
+              <img src="images/icons/nerd.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              <img src="images/icons/indeed.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              <img src="images/icons/richfood.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              <img src="images/icons/netflex.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+              <img src="images/icons/shin.png" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           SECTION 7 — FINAL CTA
+      ========================================================== -->
+      <section id="cta" class="cta container reveal">
+        <div class="cta__media">
+          <img
+            src="images/ready first img.png"
+            alt="Light-filled bedroom with warm accent wall"
+            class="cta__img cta__img--1"
+            loading="lazy"
+            decoding="async"
+          />
+          <img
+            src="images/ready sec img.png"
+            alt="Modern dining area opening into a kitchen island"
+            class="cta__img cta__img--2"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+
+        <div class="cta__content">
+          <span class="eyebrow eyebrow--dark">
+            <span class="eyebrow__dot"></span>
+            Get started today
+          </span>
+          <h2>Ready to find your <span class="text-primary">dream home?</span></h2>
+          <p>
+            Join thousands of people who've already found the perfect space
+            with Dwelling. Your next chapter starts with one search.
+          </p>
+          <div class="cta__actions">
+            <a href="#properties" class="btn btn--accent btn--lg">
+              <span>Find a home</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <a href="#about" class="btn btn--outline btn--lg">
+              <span>Contact us</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+    <footer class="footer" role="contentinfo">
+      <div class="container footer__inner">
+        <div class="footer__top">
+          <div class="footer__brand">
+            <a href="#top" class="brand brand--light" aria-label="Dwelling — Home">
+              <img src="images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <p>
+              A next-generation collaborative platform connecting renters,
+              homeowners, and trusted real-estate agents.
+            </p>
+            <form class="newsletter" onsubmit="event.preventDefault()">
+              <label for="newsletter-email" class="visually-hidden">Email address</label>
+              <input
+                id="newsletter-email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+              />
+              <button type="submit" class="btn btn--accent btn--sm">
+                <span>Send</span>
+              </button>
+            </form>
+          </div>
+
+          <nav class="footer__links" aria-label="Footer">
+            <div>
+              <p class="footer__heading">Dwelling</p>
+              <ul role="list">
+                <li><a href="#">Find my home</a></li>
+                <li><a href="#features">Homeowners</a></li>
+                <li><a href="#">Community</a></li>
+                <li><a href="#testimonials">Reviews</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Company</p>
+              <ul role="list">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#">Articles</a></li>
+                <li><a href="#">Press</a></li>
+                <li><a href="#">Refer a friend</a></li>
+                <li><a href="#">Careers</a></li>
+                <li><a href="#">Documentation</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Support</p>
+              <ul role="list">
+                <li><a href="#cta">Contact</a></li>
+                <li><a href="#">Privacy policy</a></li>
+                <li><a href="#">Terms of service</a></li>
+                <li><a href="#">FAQ</a></li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+
+        <div class="footer__bottom">
+          <div class="socials" aria-label="Social media">
+            <a href="#" aria-label="Facebook">
+              <img src="images/icons/facebook.png" alt="" aria-hidden="true" />
+            </a>
+            <a href="#" aria-label="LinkedIn">
+              <img src="images/icons/in.png" alt="" aria-hidden="true" />
+            </a>
+            <a href="#" aria-label="Twitter">
+              <img src="images/icons/twitter.png" alt="" aria-hidden="true" />
+            </a>
+          </div>
+
+          <p class="footer__credit">
+            <span>&copy; <span id="year">2026</span> Dwelling. All rights reserved.</span>
+            <span class="footer__credit-sep" aria-hidden="true">&middot;</span>
+            <span>Coded by <a href="https://mohammadamour.github.io/Mohammad-Altayeb/">Mohammad Alteab</a>.</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <a href="#top" class="to-top" aria-label="Back to top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+
+    <script src="main.js"></script>
+  </body>
+</html>
