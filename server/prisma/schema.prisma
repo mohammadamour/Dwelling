@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SEEKER
+  AGENT
+  ADMIN
+}
+
+enum PriceType {
+  RENT
+  SALE
+}
+
+enum PropertyType {
+  HOUSE
+  APT
+  CONDO
+  TOWNHOUSE
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  PENDING
+  SOLD
+}
+
+enum TourType {
+  IN_PERSON
+  VIRTUAL
+}
+
+enum TourStatus {
+  REQUESTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         Role          @default(SEEKER)
+  avatarUrl    String?
+  bio          String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  agentProfile AgentProfile?
+  properties   Property[]    @relation("AgentProperties")
+  favorites    Favorite[]
+  reviews      Review[]
+  tourBookings TourBooking[]
+}
+
+model AgentProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  licenseNumber      String?
+  yearsExperience    Int      @default(0)
+  rating             Float    @default(0.0)
+  agencyName         String?
+  totalSales         Int      @default(0)
+  specializations    Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Property {
+  id          String         @id @default(uuid())
+  title       String
+  slug        String         @unique
+  description String
+  price       Float
+  priceType   PriceType
+  beds        Int
+  baths       Int
+  sqft        Int
+  address     String
+  city        String
+  state       String
+  zip         String
+  lat         Float?
+  lng         Float?
+  type        PropertyType
+  status      PropertyStatus @default(AVAILABLE)
+  featured    Boolean        @default(false)
+  builtYear   Int?
+  petFriendly Boolean        @default(false)
+  hasParking  Boolean        @default(false)
+  agentId     String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  agent        User            @relation("AgentProperties", fields: [agentId], references: [id])
+  images       PropertyImage[]
+  favorites    Favorite[]
+  reviews      Review[]
+  tourBookings TourBooking[]
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  altText    String?
+  sortOrder  Int      @default(0)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  propertyId String
+  reviewerId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  reviewer User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+}
+
+model TourBooking {
+  id         String     @id @default(uuid())
+  propertyId String
+  userId     String
+  tourDate   DateTime
+  tourType   TourType   @default(IN_PERSON)
+  status     TourStatus @default(REQUESTED)
+  notes      String?
+  createdAt  DateTime   @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+  sourcePage   String?
+}

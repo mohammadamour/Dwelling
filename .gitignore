@@ -1,0 +1,21 @@
+# Environment variables (CRITICAL FOR SECURITY)
+.env
+*.env
+**/server/.env
+**/frontend/.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log
+
+# IDE & Tool configurations
+.vscode/
+.trae/
+.windsurf/
