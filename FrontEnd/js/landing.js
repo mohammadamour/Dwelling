@@ -1,0 +1,407 @@
+/**
+ * Dwelling — Landing Page JavaScript
+ * Dynamic property loading and interactions
+ */
+
+import { fetchFeaturedProperties, fetchPropertyStats } from './api.js';
+import { $, $$, fmtCurrency } from './shared.js';
+
+// Property card rendering
+function tagForProperty(p, idx) {
+  if (p.featured) return { cls: '', text: 'Featured' };
+  if (idx === 1) return { cls: 'property-card__tag--alt', text: 'New' };
+  if (idx === 2) return { cls: 'property-card__tag--dark', text: 'Hot deal' };
+  return null;
+}
+
+function renderPropertyCard(p, idx) {
+  const primaryImg =
+    (p.images && p.images.find((i) => i.isPrimary)) ||
+    (p.images && p.images[0]);
+  const imgUrl =
+    primaryImg && primaryImg.url
+      ? primaryImg.url
+      : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
+  const imgAlt = (primaryImg && primaryImg.altText) || p.title || 'Property image';
+  const priceLabel =
+    p.priceType === 'RENT'
+      ? fmtCurrency(p.price) + '/mo'
+      : fmtCurrency(p.price);
+  const bedsLabel = p.beds === 0 ? 'Studio' : p.beds + ' Beds';
+  const firstAddr = p.address ? (p.address.split(',')[0] || p.city) : p.city;
+  const bathsSuffix = p.baths !== 1 ? 's' : '';
+  const sqftNum = Number(p.sqft) || 0;
+  const addressLine =
+    firstAddr +
+    ', ' +
+    p.city +
+    ' · ' +
+    bedsLabel +
+    ' · ' +
+    p.baths +
+    ' Bath' +
+    bathsSuffix +
+    ' · ' +
+    sqftNum.toLocaleString() +
+    ' sqft';
+  const tag = tagForProperty(p, idx);
+
+  const li = document.createElement('li');
+  li.className = 'property-card reveal';
+  if (p && p.id) li.setAttribute('data-property-id', String(p.id));
+
+  const tagHtml = tag
+    ? '<span class="property-card__tag ' + tag.cls + '">' + tag.text + '</span>'
+    : '';
+  const priceInner = priceLabel.replace(/^\$/, '');
+  const safeTitle = p.title || 'Property';
+
+  li.innerHTML =
+    '<div class="property-card__media">' +
+    '<a href="pages/property-details.html?id=' + p.id + '">' +
+    '<img src="' +
+    imgUrl +
+    '" alt="' +
+    imgAlt +
+    '" loading="lazy" decoding="async" onerror="this.style.opacity=0.15;this.style.background=\'linear-gradient(135deg,#e2e8f0,#cbd5e1)\'" />' +
+    '</a>' +
+    tagHtml +
+    '<button type="button" class="property-card__fav" aria-label="Save ' +
+    safeTitle +
+    ' to favorites" aria-pressed="false">' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '</button>' +
+    '</div>' +
+    '<div class="property-card__body">' +
+    '<div class="property-card__row">' +
+    '<p class="property-card__price"><span class="dollar">$</span>' +
+    priceInner +
+    '</p>' +
+    '<a href="pages/property-details.html?id=' + p.id + '" class="property-card__arrow" aria-label="View ' +
+    safeTitle +
+    '">' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '</a>' +
+    '</div>' +
+    '<h3>' +
+    safeTitle +
+    '</h3>' +
+    '<p class="property-card__address">' +
+    addressLine +
+    '</p>' +
+    '</div>';
+  return li;
+}
+
+async function loadAndRenderProperties() {
+  const grid = $('#propertyGrid');
+  const emptyEl = $('#propertyEmpty');
+  if (!grid) return;
+
+  // Clear previously rendered (non-skeleton) items; make skeletons visible
+  $$(':scope > li:not(.property-card--skeleton)', grid).forEach((n) => n.remove());
+  const skeletons = $$(':scope > li.property-card--skeleton', grid);
+  skeletons.forEach((s) => {
+    s.hidden = false;
+  });
+  if (emptyEl) emptyEl.hidden = true;
+
+  try {
+    const json = await fetchFeaturedProperties(6);
+    skeletons.forEach((s) => s.remove());
+
+    const list = (json && json.data) || [];
+    if (list.length === 0) {
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    list.forEach((p, i) => frag.appendChild(renderPropertyCard(p, i)));
+    grid.appendChild(frag);
+
+    // Scroll-reveal for newly added cards
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if ('IntersectionObserver' in window && !prefersReducedMotion) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      );
+      $$('.property-card.reveal:not(.is-visible)', grid).forEach((el) => io.observe(el));
+    }
+
+    wirePropertyCardButtons();
+  } catch (error) {
+    console.error('Failed to load properties:', error);
+    skeletons.forEach((s) => s.remove());
+    if (emptyEl) {
+      emptyEl.textContent = 'Failed to load properties. Please try again later.';
+      emptyEl.hidden = false;
+    }
+  }
+}
+
+function wirePropertyCardButtons() {
+  // Favorite toggles
+  $$('.property-card__fav:not([data-wired])').forEach((btn) => {
+    btn.setAttribute('data-wired', '1');
+    btn.addEventListener('click', () => {
+      const isSaved = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', String(!isSaved));
+      const svg = btn.querySelector('svg path');
+      if (svg) {
+        if (!isSaved) {
+          svg.setAttribute('fill', 'currentColor');
+          btn.style.color = 'var(--c-accent)';
+        } else {
+          svg.setAttribute('fill', 'none');
+          btn.style.color = '';
+        }
+      }
+      btn.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }],
+        { duration: 300, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+      );
+    });
+  });
+}
+
+// Stats rendering
+function formatNumber(n, useFloat) {
+  const num = Number(n);
+  if (useFloat) return num.toFixed(1);
+  if (num >= 10000) {
+    return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'K';
+  }
+  return Math.round(num).toLocaleString('en-US');
+}
+
+function animateCounter(el, target, opts) {
+  const duration = (opts && opts.duration) || 1600;
+  const useFloat = !!(opts && opts.useFloat);
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  
+  if (prefersReducedMotion) {
+    el.textContent = formatNumber(target, useFloat);
+    return;
+  }
+  const start = performance.now();
+  const from = 0;
+  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const val = from + (target - from) * easeOutCubic(t);
+    el.textContent = formatNumber(val, useFloat);
+    if (t < 1) window.requestAnimationFrame(tick);
+    else el.textContent = formatNumber(target, useFloat);
+  }
+  window.requestAnimationFrame(tick);
+}
+
+function animateAllCounters() {
+  // Hero mini counters
+  $$('.hero__stats .counter').forEach((el) => {
+    const target = Number(el.getAttribute('data-target') || 0);
+    const isFloat = el.getAttribute('data-float') === 'true';
+    const run = () => animateCounter(el, target, { duration: 1400, useFloat: isFloat });
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    if ('IntersectionObserver' in window && !prefersReducedMotion) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            run();
+            io.disconnect();
+          }
+        },
+        { threshold: 0.4 }
+      );
+      io.observe(el);
+    } else {
+      run();
+    }
+  });
+
+  // Stats section counters
+  $$('.stat__num').forEach((row) => {
+    const counterEl = row.querySelector('.counter');
+    const suffixEl = row.querySelector('.counter-suffix');
+    const raw = row.getAttribute('data-count') || '0';
+    const suffix = row.getAttribute('data-suffix') || '';
+    const clean = raw.replace(/^[+]/, '');
+    const isFloat = clean.includes('.');
+    const target = Number(clean);
+    if (suffixEl) suffixEl.textContent = suffix;
+
+    const run = () => {
+      const hasPlusPrefix = raw.startsWith('+');
+      const origRender = (val) => (hasPlusPrefix ? '+' : '') + val;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      if (prefersReducedMotion) {
+        if (counterEl) counterEl.textContent = origRender(formatNumber(target, isFloat));
+        return;
+      }
+      if (!counterEl) return;
+      const start = performance.now();
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      function tick(now) {
+        const t = Math.min(1, (now - start) / 1800);
+        const v = target * easeOutCubic(t);
+        counterEl.textContent = origRender(formatNumber(v, isFloat));
+        if (t < 1) window.requestAnimationFrame(tick);
+        else counterEl.textContent = origRender(formatNumber(target, isFloat));
+      }
+      window.requestAnimationFrame(tick);
+    };
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if ('IntersectionObserver' in window && !prefersReducedMotion) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            run();
+            io.disconnect();
+          }
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(row);
+    } else {
+      run();
+    }
+  });
+}
+
+async function loadAndRenderStats() {
+  const data = await fetchPropertyStats();
+  if (!data) return;
+
+  // Hero counters
+  $$('.hero__stats .counter[data-stat]').forEach((el) => {
+    const key = el.getAttribute('data-stat');
+    const val = key ? data[key] : undefined;
+    if (val === undefined) return;
+    const isFloat = el.getAttribute('data-float') === 'true';
+    const suffix = el.getAttribute('data-suffix') || '';
+    el.setAttribute('data-target', String(isFloat ? val : Math.round(Number(val))));
+    el.removeAttribute('data-count');
+    const suffixEl = document.querySelector('[data-stat-suffix="' + key + '"]');
+    if (suffixEl) suffixEl.textContent = suffix;
+  });
+
+  // Stats section
+  $$('.stat__num[data-stat]').forEach((row) => {
+    const key = row.getAttribute('data-stat');
+    const val = key ? data[key] : undefined;
+    if (val === undefined) return;
+    const prefix = row.getAttribute('data-prefix') || '';
+    const suffix = row.getAttribute('data-suffix') || '';
+    const isFloat = typeof val === 'number' && !Number.isInteger(val);
+    row.setAttribute(
+      'data-count',
+      prefix + (isFloat ? Number(val).toFixed(1) : String(val))
+    );
+    row.setAttribute('data-suffix', suffix);
+    const suffixEl = row.querySelector('.counter-suffix');
+    if (suffixEl) suffixEl.textContent = suffix;
+  });
+
+  animateAllCounters();
+}
+
+// Hero search form
+function initHeroSearch() {
+  const searchForm = $('.search-card');
+  if (!searchForm) return;
+
+  searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const locEl = $('#location', searchForm);
+    const htEl = $('#hometype', searchForm);
+    const location = (locEl && locEl.value && locEl.value.trim()) || '';
+    const hometype = (htEl && htEl.value && htEl.value.trim()) || '';
+    
+    // Navigate to properties page with filters
+    const params = new URLSearchParams();
+    if (location) params.set('search', location);
+    if (hometype) params.set('type', hometype);
+    
+    window.location.href = 'pages/properties.html?' + params.toString();
+  });
+}
+
+// Newsletter form
+function initNewsletter() {
+  const newsletterForm = $('.newsletter');
+  if (!newsletterForm) return;
+
+  newsletterForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('#newsletter-email', newsletterForm);
+    const email = input && input.value && input.value.trim();
+    if (!email) return;
+    
+    try {
+      await fetch('http://localhost:5001/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, sourcePage: 'home' }),
+      });
+    } catch (_) {
+      /* swallow */
+    }
+    if (input) {
+      input.value = '';
+      input.placeholder = '🎉 Thanks! Check your inbox.';
+      setTimeout(() => {
+        input.placeholder = 'you@example.com';
+      }, 3500);
+    }
+  });
+}
+
+// Video play button
+function initVideoButton() {
+  const videoPlayBtn = $('.video-block__play');
+  if (videoPlayBtn) {
+    videoPlayBtn.addEventListener('click', () => {
+      videoPlayBtn.animate(
+        [
+          { transform: 'translate(-50%, -50%) scale(1)' },
+          { transform: 'translate(-50%, -50%) scale(0.92)' },
+          { transform: 'translate(-50%, -50%) scale(1)' },
+        ],
+        { duration: 280, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+      );
+    });
+  }
+}
+
+// Initialize landing page
+function initLanding() {
+  loadAndRenderStats();
+  loadAndRenderProperties();
+  initHeroSearch();
+  initNewsletter();
+  initVideoButton();
+}
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLanding);
+} else {
+  initLanding();
+}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Browse and search properties on Dwelling - Find your perfect home with our advanced filters." />
+    <meta name="theme-color" content="#0F172A" />
+    <title>Browse Properties — Dwelling</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../css/shared.css" />
+    <link rel="stylesheet" href="../css/landing.css" />
+    <link rel="stylesheet" href="../css/properties.css" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <!-- =========================================================
+         HEADER / NAV
+    ========================================================== -->
+    <header class="site-header" id="top">
+      <nav class="nav container" aria-label="Primary">
+        <a href="../index.html" class="brand" aria-label="Dwelling — Home">
+          <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+          <span>Dwelling</span>
+        </a>
+
+        <ul class="nav-links" role="list">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="properties.html" class="nav-link" aria-current="page">Properties</a></li>
+          <li><a href="../index.html#about" class="nav-link">About</a></li>
+          <li><a href="../index.html#features" class="nav-link">Features</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <!-- Dynamic auth buttons will be inserted here -->
+        </div>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-drawer"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </nav>
+
+      <!-- Mobile drawer -->
+      <div
+        class="mobile-drawer"
+        id="mobile-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        aria-hidden="true"
+      >
+        <div class="mobile-drawer__backdrop" data-close-drawer></div>
+        <div class="mobile-drawer__panel">
+          <div class="mobile-drawer__header">
+            <a href="../index.html" class="brand" aria-label="Dwelling — Home">
+              <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <button
+              type="button"
+              class="nav-toggle nav-toggle--close"
+              aria-label="Close navigation menu"
+              data-close-drawer
+            >
+              <img src="../images/icons/close.svg" alt="" aria-hidden="true" />
+            </button>
+          </div>
+          <ul class="mobile-drawer__links" role="list">
+            <li><a href="../index.html" class="nav-link" data-close-drawer>Home</a></li>
+            <li><a href="properties.html" class="nav-link" data-close-drawer>Properties</a></li>
+            <li><a href="../index.html#about" class="nav-link" data-close-drawer>About</a></li>
+            <li><a href="../index.html#features" class="nav-link" data-close-drawer>Features</a></li>
+          </ul>
+          <div class="mobile-drawer__auth">
+            <!-- Dynamic auth buttons will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- =========================================================
+           PAGE HEADER
+      ========================================================== -->
+      <section class="page-header">
+        <div class="container">
+          <div class="page-header__content reveal">
+            <span class="eyebrow">
+              <span class="eyebrow__dot"></span>
+              Property Search
+            </span>
+            <h1 class="page-header__title">Find Your Perfect <span class="text-primary">Home</span></h1>
+            <p class="page-header__subtitle">
+              Explore our curated collection of properties. Use filters to narrow down your search and find exactly what you're looking for.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           FILTERS BAR
+      ========================================================== -->
+      <section class="container">
+        <form class="filters-bar" id="filtersForm">
+          <div class="filters-bar__grid">
+            <!-- Search -->
+            <div class="filters-bar__search form-group">
+              <label for="search" class="form-label">Search</label>
+              <input
+                type="text"
+                id="search"
+                name="search"
+                class="form-input"
+                placeholder="City, neighborhood, or address"
+              />
+            </div>
+
+            <!-- City -->
+            <div class="form-group">
+              <label for="city" class="form-label">City</label>
+              <select id="city" name="city" class="form-select">
+                <option value="">All Cities</option>
+                <option value="New York">New York</option>
+                <option value="Los Angeles">Los Angeles</option>
+                <option value="Chicago">Chicago</option>
+                <option value="Houston">Houston</option>
+                <option value="Phoenix">Phoenix</option>
+                <option value="Miami">Miami</option>
+                <option value="Seattle">Seattle</option>
+                <option value="Denver">Denver</option>
+                <option value="Boston">Boston</option>
+                <option value="Atlanta">Atlanta</option>
+              </select>
+            </div>
+
+            <!-- Property Type -->
+            <div class="form-group">
+              <label for="type" class="form-label">Property Type</label>
+              <select id="type" name="type" class="form-select">
+                <option value="">All Types</option>
+                <option value="House">House</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Condo">Condo</option>
+                <option value="Townhouse">Townhouse</option>
+              </select>
+            </div>
+
+            <!-- Price Type -->
+            <div class="form-group">
+              <label for="priceType" class="form-label">Price Type</label>
+              <select id="priceType" name="priceType" class="form-select">
+                <option value="">All</option>
+                <option value="RENT">For Rent</option>
+                <option value="SALE">For Sale</option>
+              </select>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filters-bar__price form-group">
+              <div>
+                <label for="minPrice" class="form-label price-range__label">Min Price</label>
+                <input
+                  type="number"
+                  id="minPrice"
+                  name="minPrice"
+                  class="form-input"
+                  placeholder="No min"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label for="maxPrice" class="form-label price-range__label">Max Price</label>
+                <input
+                  type="number"
+                  id="maxPrice"
+                  name="maxPrice"
+                  class="form-input"
+                  placeholder="No max"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <!-- Bedrooms -->
+            <div class="form-group">
+              <label for="beds" class="form-label">Bedrooms</label>
+              <select id="beds" name="beds" class="form-select">
+                <option value="">Any</option>
+                <option value="0">Studio</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+
+            <!-- Bathrooms -->
+            <div class="form-group">
+              <label for="baths" class="form-label">Bathrooms</label>
+              <select id="baths" name="baths" class="form-select">
+                <option value="">Any</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+              </select>
+            </div>
+
+            <!-- Featured -->
+            <div class="form-group">
+              <label for="featured" class="form-label">Featured Only</label>
+              <select id="featured" name="featured" class="form-select">
+                <option value="">All</option>
+                <option value="true">Featured</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters-bar__actions">
+            <button type="submit" class="btn btn--primary">
+              <span>Apply Filters</span>
+            </button>
+            <button type="button" class="btn btn--outline" id="resetFilters">
+              <span>Reset</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- =========================================================
+           RESULTS SECTION
+      ========================================================== -->
+      <section class="container properties-page">
+        <!-- Results count and sort -->
+        <div class="results-count">
+          <p class="results-count__text">
+            Showing <strong id="resultsStart">0</strong>–<strong id="resultsEnd">0</strong> of <strong id="resultsTotal">0</strong> properties
+          </p>
+          <div class="results-sort">
+            <label for="sortBy">Sort by:</label>
+            <select id="sortBy" name="sortBy" class="form-select">
+              <option value="createdAt-desc">Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="featured-desc">Featured</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Loading state -->
+        <div class="properties-page__loading" id="loadingState">
+          <div class="property-card property-card--skeleton" aria-hidden="true">
+            <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+            <div class="property-card__body">
+              <div class="skeleton skeleton--line" style="width:50%"></div>
+              <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+              <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="property-card property-card--skeleton" aria-hidden="true">
+            <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+            <div class="property-card__body">
+              <div class="skeleton skeleton--line" style="width:50%"></div>
+              <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+              <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+            </div>
+          </div>
+          <div class="property-card property-card--skeleton" aria-hidden="true">
+            <div class="property-card__media"><div class="skeleton skeleton--img"></div></div>
+            <div class="property-card__body">
+              <div class="skeleton skeleton--line" style="width:50%"></div>
+              <div class="skeleton skeleton--line" style="width:80%;margin-top:12px"></div>
+              <div class="skeleton skeleton--line" style="width:65%;margin-top:8px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="properties-page__empty" id="emptyState" hidden>
+          <svg class="properties-page__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 10.5 12 3l9 7.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M5 9.5V21h14V9.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 21v-6h4v6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h2 class="properties-page__empty-title">No properties found</h2>
+          <p class="properties-page__empty-text">
+            Try adjusting your filters or search terms to find more properties.
+          </p>
+          <button type="button" class="btn btn--primary" id="resetFromEmpty">
+            <span>Reset Filters</span>
+          </button>
+        </div>
+
+        <!-- Property grid -->
+        <ul class="properties-page__grid" id="propertyGrid" role="list">
+          <!-- Properties will be dynamically loaded here -->
+        </ul>
+
+        <!-- Pagination -->
+        <nav class="pagination" id="pagination" aria-label="Property pagination">
+          <button type="button" class="pagination__btn" id="prevPage" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <span class="pagination__info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+          <button type="button" class="pagination__btn" id="nextPage" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </nav>
+      </section>
+    </main>
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+    <footer class="footer" role="contentinfo">
+      <div class="container footer__inner">
+        <div class="footer__top">
+          <div class="footer__brand">
+            <a href="../index.html" class="brand brand--light" aria-label="Dwelling — Home">
+              <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <p>
+              A next-generation collaborative platform connecting renters,
+              homeowners, and trusted real-estate agents.
+            </p>
+          </div>
+
+          <nav class="footer__links" aria-label="Footer">
+            <div>
+              <p class="footer__heading">Dwelling</p>
+              <ul role="list">
+                <li><a href="properties.html">Find my home</a></li>
+                <li><a href="../index.html#features">Homeowners</a></li>
+                <li><a href="../index.html#testimonials">Reviews</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Company</p>
+              <ul role="list">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#cta">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Support</p>
+              <ul role="list">
+                <li><a href="../index.html#cta">Contact</a></li>
+                <li><a href="#">Privacy policy</a></li>
+                <li><a href="#">Terms of service</a></li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+
+        <div class="footer__bottom">
+          <p class="footer__credit">
+            <span>&copy; <span id="year">2026</span> Dwelling. All rights reserved.</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="../js/shared.js"></script>
+    <script type="module" src="../js/properties.js"></script>
+  </body>
+</html>

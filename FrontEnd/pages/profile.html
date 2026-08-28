@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Manage your Dwelling profile - Update your personal information and preferences." />
+    <meta name="theme-color" content="#0F172A" />
+    <title>My Profile — Dwelling</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../css/shared.css" />
+    <link rel="stylesheet" href="../css/landing.css" />
+    <link rel="stylesheet" href="../css/profile.css" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <!-- =========================================================
+         HEADER / NAV
+    ========================================================== -->
+    <header class="site-header" id="top">
+      <nav class="nav container" aria-label="Primary">
+        <a href="../index.html" class="brand" aria-label="Dwelling — Home">
+          <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+          <span>Dwelling</span>
+        </a>
+
+        <ul class="nav-links" role="list">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="properties.html" class="nav-link">Properties</a></li>
+          <li><a href="../index.html#about" class="nav-link">About</a></li>
+          <li><a href="../index.html#features" class="nav-link">Features</a></li>
+        </ul>
+
+        <div class="nav-cta">
+          <!-- Dynamic auth buttons will be inserted here -->
+        </div>
+
+        <button
+          type="button"
+          class="nav-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-drawer"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </nav>
+
+      <!-- Mobile drawer -->
+      <div
+        class="mobile-drawer"
+        id="mobile-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mobile navigation"
+        aria-hidden="true"
+      >
+        <div class="mobile-drawer__backdrop" data-close-drawer></div>
+        <div class="mobile-drawer__panel">
+          <div class="mobile-drawer__header">
+            <a href="../index.html" class="brand" aria-label="Dwelling — Home">
+              <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <button
+              type="button"
+              class="nav-toggle nav-toggle--close"
+              aria-label="Close navigation menu"
+              data-close-drawer
+            >
+              <img src="../images/icons/close.svg" alt="" aria-hidden="true" />
+            </button>
+          </div>
+          <ul class="mobile-drawer__links" role="list">
+            <li><a href="../index.html" class="nav-link" data-close-drawer>Home</a></li>
+            <li><a href="properties.html" class="nav-link" data-close-drawer>Properties</a></li>
+            <li><a href="../index.html#about" class="nav-link" data-close-drawer>About</a></li>
+            <li><a href="../index.html#features" class="nav-link" data-close-drawer>Features</a></li>
+          </ul>
+          <div class="mobile-drawer__auth">
+            <!-- Dynamic auth buttons will be inserted here -->
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- =========================================================
+           LOADING STATE
+      ========================================================== -->
+      <div class="profile-page__loading" id="loadingState">
+        <div class="spinner profile-page__loading-icon"></div>
+        <p style="color: var(--c-muted);">Loading your profile...</p>
+      </div>
+
+      <!-- =========================================================
+           NOT AUTHENTICATED STATE
+      ========================================================== -->
+      <div class="profile-page__not-auth" id="notAuthState" hidden>
+        <svg class="profile-page__not-auth-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <h2 class="profile-page__not-auth-title">Sign In Required</h2>
+        <p class="profile-page__not-auth-text">
+          You need to be signed in to view and edit your profile.
+        </p>
+        <div class="profile-page__not-auth-actions">
+          <a href="login.html" class="btn btn--primary">
+            <span>Sign In</span>
+          </a>
+          <a href="register.html" class="btn btn--outline">
+            <span>Create Account</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- =========================================================
+           ERROR STATE
+      ========================================================== -->
+      <div class="profile-page__error" id="errorState" hidden>
+        <svg class="profile-page__error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+        <h2 class="profile-page__error-title">Error Loading Profile</h2>
+        <p class="profile-page__error-text">
+          We couldn't load your profile. Please try again later or contact support if the problem persists.
+        </p>
+        <button type="button" class="btn btn--primary" id="retryBtn">
+          <span>Try Again</span>
+        </button>
+      </div>
+
+      <!-- =========================================================
+           PROFILE CONTENT
+      ========================================================== -->
+      <div class="container profile-page" id="profileContent" hidden>
+        <div class="profile-header">
+          <h1 class="profile-header__title">My Profile</h1>
+          <p class="profile-header__subtitle">Manage your account settings and preferences</p>
+        </div>
+
+        <div class="profile-grid">
+          <!-- Profile Card -->
+          <div class="profile-card">
+            <img src="" alt="Profile avatar" class="profile-card__avatar" id="profileAvatar" />
+            <h2 class="profile-card__name" id="profileName">Loading...</h2>
+            <p class="profile-card__email" id="profileEmail">email@example.com</p>
+            <span class="profile-card__role" id="profileRole">User</span>
+
+            <div class="profile-card__stats">
+              <div class="profile-card__stat">
+                <div class="profile-card__stat-value" id="statFavorites">0</div>
+                <div class="profile-card__stat-label">Favorites</div>
+              </div>
+              <div class="profile-card__stat">
+                <div class="profile-card__stat-value" id="statReviews">0</div>
+                <div class="profile-card__stat-label">Reviews</div>
+              </div>
+              <div class="profile-card__stat">
+                <div class="profile-card__stat-value" id="statJoined">-</div>
+                <div class="profile-card__stat-label">Joined</div>
+              </div>
+            </div>
+
+            <div class="profile-card__actions">
+              <button type="button" class="btn btn--primary btn--full" id="changeAvatarBtn">
+                <span>Change Avatar</span>
+              </button>
+              <button type="button" class="btn btn--outline btn--full" id="logoutBtn">
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Profile Form -->
+          <div class="profile-form-card">
+            <div class="profile-form-card__header">
+              <h2 class="profile-form-card__title">Personal Information</h2>
+              <p class="profile-form-card__subtitle">Update your personal details and contact information</p>
+            </div>
+
+            <form class="profile-form" id="profileForm">
+              <div id="formMessage"></div>
+
+              <div class="profile-form__section">
+                <h3 class="profile-form__section-title">Basic Information</h3>
+                <div class="profile-form__row">
+                  <div class="form-group">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      class="form-input"
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      class="form-input"
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="profile-form__row">
+                  <div class="form-group">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      class="form-input"
+                      placeholder="+1 (555) 000-0000"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="role" class="form-label">Account Type</label>
+                    <select id="role" name="role" class="form-select" disabled>
+                      <option value="SEEKER">Home Seeker</option>
+                      <option value="AGENT">Real Estate Agent</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="profile-form__section">
+                <h3 class="profile-form__section-title">Additional Information</h3>
+                <div class="form-group">
+                  <label for="bio" class="form-label">Bio</label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    class="form-textarea"
+                    placeholder="Tell us a bit about yourself..."
+                    rows="4"
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="avatarUrl" class="form-label">Avatar URL</label>
+                  <input
+                    type="url"
+                    id="avatarUrl"
+                    name="avatarUrl"
+                    class="form-input"
+                    placeholder="https://example.com/avatar.jpg"
+                  />
+                </div>
+              </div>
+
+              <div class="profile-form__actions">
+                <button type="submit" class="btn btn--primary">
+                  <span>Save Changes</span>
+                </button>
+                <button type="button" class="btn btn--outline" id="cancelBtn">
+                  <span>Cancel</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- =========================================================
+         FOOTER
+    ========================================================== -->
+    <footer class="footer" role="contentinfo">
+      <div class="container footer__inner">
+        <div class="footer__top">
+          <div class="footer__brand">
+            <a href="../index.html" class="brand brand--light" aria-label="Dwelling — Home">
+              <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </a>
+            <p>
+              A next-generation collaborative platform connecting renters,
+              homeowners, and trusted real-estate agents.
+            </p>
+          </div>
+
+          <nav class="footer__links" aria-label="Footer">
+            <div>
+              <p class="footer__heading">Dwelling</p>
+              <ul role="list">
+                <li><a href="properties.html">Find my home</a></li>
+                <li><a href="../index.html#features">Homeowners</a></li>
+                <li><a href="../index.html#testimonials">Reviews</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Company</p>
+              <ul role="list">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#cta">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <p class="footer__heading">Support</p>
+              <ul role="list">
+                <li><a href="../index.html#cta">Contact</a></li>
+                <li><a href="#">Privacy policy</a></li>
+                <li><a href="#">Terms of service</a></li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+
+        <div class="footer__bottom">
+          <p class="footer__credit">
+            <span>&copy; <span id="year">2026</span> Dwelling. All rights reserved.</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="../js/shared.js"></script>
+    <script type="module" src="../js/profile.js"></script>
+  </body>
+</html>
