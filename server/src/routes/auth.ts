@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest, authenticate } from '../middleware/auth';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -143,7 +143,7 @@ router.post('/login', async (req: Request, res: Response) => {
  * GET /api/auth/me
  * Get current user profile (requires authentication)
  */
-router.get('/me', async (req: AuthRequest, res: Response) => {
+router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -172,6 +172,12 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
             totalSales: true,
             specializations: true
           }
+        },
+        _count: {
+          select: {
+            favorites: true,
+            reviews: true
+          }
         }
       }
     });
@@ -180,7 +186,7 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json({ user });
+    res.status(200).json(user);
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user profile' });

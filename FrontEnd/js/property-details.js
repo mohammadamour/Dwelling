@@ -145,7 +145,7 @@ async function loadPropertyDetails() {
       }
       if (agentName) agentName.textContent = agent.name || 'Agent';
       if (agentRole) agentRole.textContent = agent.role || 'Property Agent';
-      if (agentRatingValue) agentRatingValue.textContent = agent.rating?.toFixed(1) || '0.0';
+      if (agentRatingValue) agentRatingValue.textContent = agent.agentProfile?.rating?.toFixed(1) || '0.0';
     }
 
     // Update reviews
@@ -166,9 +166,9 @@ async function loadPropertyDetails() {
         reviewsList.innerHTML = reviews.map(review => `
           <div class="review-card">
             <div class="review-card__header">
-              <img src="${review.user?.avatarUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22/%3E'}" alt="${review.user?.name || 'User'}" class="review-card__avatar" />
+              <img src="${review.reviewer?.avatarUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22/%3E'}" alt="${review.reviewer?.name || 'User'}" class="review-card__avatar" />
               <div class="review-card__author">
-                <p class="review-card__name">${review.user?.name || 'Anonymous'}</p>
+                <p class="review-card__name">${review.reviewer?.name || 'Anonymous'}</p>
                 <p class="review-card__date">${new Date(review.createdAt).toLocaleDateString()}</p>
               </div>
               <div class="review-card__rating">

@@ -4,9 +4,17 @@ import {
   getPropertyById,
   getPropertyStats,
   getFeaturedProperties,
+  createProperty,
 } from '../controllers/propertyController';
+import { authenticate, requireRole } from '../middleware/auth';
 
 const router = Router();
+
+/**
+ * POST /api/properties
+ * Create a new property listing (restricted to AGENTS and ADMINS)
+ */
+router.post('/', authenticate, requireRole(['AGENT', 'ADMIN']), createProperty);
 
 /**
  * GET /api/properties

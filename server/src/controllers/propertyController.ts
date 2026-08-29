@@ -293,3 +293,118 @@ export const getFeaturedProperties = async (req: any, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch featured properties' });
   }
 };
+
+export const createProperty = async (req: any, res: Response) => {
+  try {
+    const prisma = (req as any).prisma as PrismaClient;
+    const agentId = req.user?.id;
+
+    if (!agentId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const {
+      title,
+      description,
+      price,
+      priceType,
+      beds,
+      baths,
+      sqft,
+      address,
+      city,
+      state,
+      zip,
+      type,
+      images,
+    } = req.body;
+
+    // Validation
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ error: 'Title must be a non-empty string' });
+    }
+    if (!description || typeof description !== 'string' || !description.trim()) {
+      return res.status(400).json({ error: 'Description must be a non-empty string' });
+    }
+    const numPrice = Number(price);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      return res.status(400).json({ error: 'Price must be a valid positive number' });
+    }
+    if (priceType !== 'RENT' && priceType !== 'SALE') {
+      return res.status(400).json({ error: 'PriceType must be RENT or SALE' });
+    }
+    const numBeds = Number(beds);
+    if (isNaN(numBeds) || numBeds < 0) {
+      return res.status(400).json({ error: 'Beds must be a non-negative number' });
+    }
+    const numBaths = Number(baths);
+    if (isNaN(numBaths) || numBaths < 0) {
+      return res.status(400).json({ error: 'Baths must be a non-negative number' });
+    }
+    const numSqft = Number(sqft);
+    if (isNaN(numSqft) || numSqft <= 0) {
+      return res.status(400).json({ error: 'Sqft must be a positive number' });
+    }
+    if (!address || typeof address !== 'string' || !address.trim()) {
+      return res.status(400).json({ error: 'Address must be a non-empty string' });
+    }
+    if (!city || typeof city !== 'string' || !city.trim()) {
+      return res.status(400).json({ error: 'City must be a non-empty string' });
+    }
+    if (!state || typeof state !== 'string' || !state.trim()) {
+      return res.status(400).json({ error: 'State must be a non-empty string' });
+    }
+    if (!zip || typeof zip !== 'string' || !zip.trim()) {
+      return res.status(400).json({ error: 'Zip must be a non-empty string' });
+    }
+    const validTypes = ['HOUSE', 'APT', 'CONDO', 'TOWNHOUSE'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ error: 'Type must be HOUSE, APT, CONDO, or TOWNHOUSE' });
+    }
+
+    // Generate unique slug
+    const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const slug = `${cleanTitle}-${randomSuffix}`;
+
+    // Handle images
+    const imageList = Array.isArray(images) ? images.filter((img: any) => typeof img === 'string' && img.trim()) : [];
+    const propertyImages = imageList.map((url: string, idx: number) => ({
+      url: url.trim(),
+      altText: `${title} - Image ${idx + 1}`,
+      sortOrder: idx,
+      isPrimary: idx === 0,
+    }));
+
+    // Create property
+    const newProperty = await prisma.property.create({
+      data: {
+        title: title.trim(),
+        slug,
+        description: description.trim(),
+        price: numPrice,
+        priceType,
+        beds: numBeds,
+        baths: numBaths,
+        sqft: numSqft,
+        address: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        zip: zip.trim(),
+        type: type as any,
+        agentId,
+        images: {
+          create: propertyImages,
+        },
+      },
+      include: {
+        images: true,
+      },
+    });
+
+    res.status(201).json({ data: newProperty });
+  } catch (error) {
+    console.error('POST /api/properties error:', error);
+    res.status(500).json({ error: 'Failed to create property listing' });
+  }
+};

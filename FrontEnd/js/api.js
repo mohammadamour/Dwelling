@@ -40,6 +40,25 @@ export function isAuthenticated() {
   return !!getAuthToken();
 }
 
+/**
+ * Parse the JWT payload to get logged in user details (id, email, role)
+ * @returns {Object|null} User details or null if not authenticated
+ */
+export function getAuthUser() {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
 // Fetch Wrapper
 /**
  * Central fetch wrapper that automatically attaches Authorization header
@@ -152,6 +171,18 @@ export async function fetchPropertyStats() {
   return apiFetch('/properties/stats');
 }
 
+/**
+ * Create a new property listing (restricted to AGENT/ADMIN roles)
+ * @param {Object} propertyData - The property listing data
+ * @returns {Promise<Object>} Created property data
+ */
+export async function createProperty(propertyData) {
+  return apiFetch('/properties', {
+    method: 'POST',
+    body: JSON.stringify(propertyData),
+  });
+}
+
 // Auth Services
 /**
  * Login user with credentials
@@ -250,12 +281,14 @@ const api = {
   fetchPropertyById,
   fetchFeaturedProperties,
   fetchPropertyStats,
+  createProperty,
   
   // Auth services
   loginUser,
   registerUser,
   logoutUser,
   fetchCurrentUser,
+  getAuthUser,
   
   // User services
   updateUserProfile,

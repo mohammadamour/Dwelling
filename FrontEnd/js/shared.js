@@ -10,7 +10,8 @@ import {
   removeAuthToken, 
   isAuthenticated,
   fetchCurrentUser,
-  logoutUser
+  logoutUser,
+  getAuthUser
 } from './api.js';
 
 // DOM Helpers
@@ -27,14 +28,27 @@ function renderNavbar() {
   const navCta = $('.nav-cta');
   if (!navCta) return;
 
+  const isSubPage = window.location.pathname.includes('/pages/');
+  const basePath = isSubPage ? '../' : '';
+
   if (isAuthenticated()) {
-    // Show User Profile / Logout when authenticated
+    const user = getAuthUser();
+    const isAgent = user && user.role === 'AGENT';
+    
+    const listPropertyBtn = isAgent 
+      ? `<a href="${basePath}pages/add-property.html" class="btn btn--primary btn--sm">
+           <span>List Property</span>
+         </a>`
+      : '';
+
+    // Show User Profile / Logout / List Property when authenticated
     navCta.innerHTML = `
-      <div class="nav-auth">
-        <a href="pages/profile.html" class="btn btn--outline btn--sm">
+      <div class="nav-auth" style="display: flex; gap: 0.75rem; align-items: center;">
+        ${listPropertyBtn}
+        <a href="${basePath}pages/profile.html" class="btn btn--outline btn--sm">
           <span>Profile</span>
         </a>
-        <button id="logoutBtn" class="btn btn--primary btn--sm">
+        <button id="logoutBtn" class="btn btn--outline btn--sm">
           <span>Logout</span>
         </button>
       </div>
@@ -43,15 +57,15 @@ function renderNavbar() {
     // Add logout handler
     $('#logoutBtn').addEventListener('click', async () => {
       await logoutUser();
-      window.location.href = '../index.html';
+      window.location.href = isSubPage ? '../index.html' : 'index.html';
     });
   } else {
     // Show Login/Register when unauthenticated
     navCta.innerHTML = `
-      <a href="pages/login.html" class="btn btn--outline btn--sm">
+      <a href="${basePath}pages/login.html" class="btn btn--outline btn--sm">
         <span>Login</span>
       </a>
-      <a href="pages/register.html" class="btn btn--primary btn--sm">
+      <a href="${basePath}pages/register.html" class="btn btn--primary btn--sm">
         <span>Register</span>
       </a>
     `;

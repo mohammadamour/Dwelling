@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="List a property on Dwelling - Publish your real estate listing to find renters or buyers." />
+    <meta name="theme-color" content="#0F172A" />
+    <title>List Property — Dwelling</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../css/shared.css" />
+    <link rel="stylesheet" href="../css/auth.css" />
+    <style>
+      .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+      }
+      .form-grid-3 {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 1.25rem;
+      }
+      @media (max-width: 640px) {
+        .form-grid-2, .form-grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="auth-page">
+      <div class="auth-container" style="max-width: 720px; padding: 2rem 1rem;">
+        <div class="auth-card">
+          <!-- Back link -->
+          <a href="../index.html" class="auth-back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span>Back to Home</span>
+          </a>
+
+          <!-- Header -->
+          <div class="auth-header">
+            <div class="auth-header__logo">
+              <img src="../images/icons/logo.svg" alt="" aria-hidden="true" />
+              <span>Dwelling</span>
+            </div>
+            <h1 class="auth-header__title">List a Property</h1>
+            <p class="auth-header__subtitle">Fill in the details to publish your real estate listing</p>
+          </div>
+
+          <!-- Error/Success messages -->
+          <div id="errorMessage" class="auth-form__error" hidden></div>
+          <div id="successMessage" class="auth-form__success" hidden></div>
+
+          <!-- Add Property Form -->
+          <form class="auth-form" id="addPropertyForm">
+            <!-- Basic Details -->
+            <div class="form-group">
+              <label for="title" class="form-label">Property Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-input"
+                placeholder="e.g. Modern Villa with Ocean View"
+                required
+              />
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="price" class="form-label">Price</label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  class="form-input"
+                  placeholder="e.g. 2500"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="priceType" class="form-label">Listed For</label>
+                <select id="priceType" name="priceType" class="form-input" required style="appearance: auto;">
+                  <option value="RENT">Rent (/mo)</option>
+                  <option value="SALE">Sale</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="type" class="form-label">Property Type</label>
+                <select id="type" name="type" class="form-input" required style="appearance: auto;">
+                  <option value="HOUSE">House</option>
+                  <option value="APT">Apartment</option>
+                  <option value="CONDO">Condo</option>
+                  <option value="TOWNHOUSE">Townhouse</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Features -->
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="sqft" class="form-label">Square Footage (Sqft)</label>
+                <input
+                  type="number"
+                  id="sqft"
+                  name="sqft"
+                  class="form-input"
+                  placeholder="e.g. 1200"
+                  min="10"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="beds" class="form-label">Bedrooms</label>
+                <input
+                  type="number"
+                  id="beds"
+                  name="beds"
+                  class="form-input"
+                  placeholder="e.g. 3"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="baths" class="form-label">Bathrooms</label>
+                <input
+                  type="number"
+                  id="baths"
+                  name="baths"
+                  class="form-input"
+                  placeholder="e.g. 2"
+                  min="0"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div class="form-group">
+              <label for="address" class="form-label">Street Address</label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                class="form-input"
+                placeholder="e.g. 123 Luxury Ave"
+                required
+              />
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label for="city" class="form-label">City</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  class="form-input"
+                  placeholder="e.g. Los Angeles"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="state" class="form-label">State</label>
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  class="form-input"
+                  placeholder="e.g. CA"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="zip" class="form-label">Zip Code</label>
+                <input
+                  type="text"
+                  id="zip"
+                  name="zip"
+                  class="form-input"
+                  placeholder="e.g. 90210"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+              <label for="description" class="form-label">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                class="form-input"
+                placeholder="Describe your property details, style, amenities..."
+                rows="4"
+                required
+                style="resize: vertical; font-family: inherit;"
+              ></textarea>
+            </div>
+
+            <!-- Images -->
+            <div class="form-group">
+              <label class="form-label">Property Image URLs</label>
+              <input
+                type="url"
+                id="imageUrl1"
+                class="form-input image-input"
+                placeholder="Primary Image URL (e.g. https://images.unsplash.com/...)"
+                style="margin-bottom: 0.5rem;"
+                required
+              />
+              <input
+                type="url"
+                id="imageUrl2"
+                class="form-input image-input"
+                placeholder="Image URL 2 (Optional)"
+                style="margin-bottom: 0.5rem;"
+              />
+              <input
+                type="url"
+                id="imageUrl3"
+                class="form-input image-input"
+                placeholder="Image URL 3 (Optional)"
+              />
+            </div>
+
+            <div class="auth-form__actions">
+              <button type="submit" class="btn btn--primary btn--full">
+                <span>Publish Property</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/add-property.js"></script>
+  </body>
+</html>
