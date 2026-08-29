@@ -4,6 +4,7 @@
  */
 
 import { fetchCurrentUser, updateUserProfile, logoutUser, isAuthenticated } from './api.js';
+import { $, $$ } from './shared.js';
 
 // Load user profile
 async function loadUserProfile() {

@@ -4,6 +4,7 @@
  */
 
 import { loginUser } from './api.js';
+import { $ } from './shared.js';
 
 // Form handling
 function initLoginForm() {

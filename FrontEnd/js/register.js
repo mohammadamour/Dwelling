@@ -4,6 +4,7 @@
  */
 
 import { registerUser } from './api.js';
+import { $ } from './shared.js';
 
 // Form handling
 function initRegisterForm() {
