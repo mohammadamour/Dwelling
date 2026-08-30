@@ -16,12 +16,40 @@ const API_BASE_URL =
 // Token Management
 const TOKEN_KEY = 'dwelling_auth_token';
 
+function safeStorageGet(key) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return null;
+    return window.localStorage.getItem(key);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return false;
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function safeStorageRemove(key) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    window.localStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore storage failures gracefully.
+  }
+}
+
 /**
  * Retrieve JWT token from localStorage
  * @returns {string|null} The stored token or null if not found
  */
 export function getAuthToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  return safeStorageGet(TOKEN_KEY);
 }
 
 /**
@@ -29,14 +57,19 @@ export function getAuthToken() {
  * @param {string} token - The JWT token to store
  */
 export function setAuthToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
+  if (!token) {
+    removeAuthToken();
+    return;
+  }
+
+  safeStorageSet(TOKEN_KEY, token);
 }
 
 /**
  * Remove JWT token from localStorage
  */
 export function removeAuthToken() {
-  localStorage.removeItem(TOKEN_KEY);
+  safeStorageRemove(TOKEN_KEY);
 }
 
 /**
@@ -44,7 +77,33 @@ export function removeAuthToken() {
  * @returns {boolean} True if token exists
  */
 export function isAuthenticated() {
-  return !!getAuthToken();
+  const token = getAuthToken();
+  return !!token && token.split('.').length === 3;
+}
+
+/**
+ * Normalize API responses that may be wrapped or raw.
+ * @param {any} payload
+ * @returns {any}
+ */
+export function normalizeApiPayload(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'data') && payload.data !== undefined) {
+    return payload.data;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'result') && payload.result !== undefined) {
+    return payload.result;
+  }
+
+  return payload;
 }
 
 /**
@@ -53,7 +112,11 @@ export function isAuthenticated() {
  */
 export function getAuthUser() {
   const token = getAuthToken();
-  if (!token) return null;
+  if (!token || token.split('.').length !== 3) {
+    removeAuthToken();
+    return null;
+  }
+
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -62,6 +125,7 @@ export function getAuthUser() {
     }).join(''));
     return JSON.parse(jsonPayload);
   } catch (e) {
+    removeAuthToken();
     return null;
   }
 }
@@ -100,6 +164,10 @@ export async function apiFetch(endpoint, options = {}) {
   try {
     const response = await fetch(url, config);
 
+    if (response.status === 401) {
+      removeAuthToken();
+    }
+
     // Handle non-JSON responses (e.g., 204 No Content)
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -123,15 +191,7 @@ export async function apiFetch(endpoint, options = {}) {
 }
 
 function unwrapPayload(payload) {
-  if (!payload || typeof payload !== 'object') {
-    return payload;
-  }
-
-  if (Object.prototype.hasOwnProperty.call(payload, 'data') && payload.data !== undefined) {
-    return payload.data;
-  }
-
-  return payload;
+  return normalizeApiPayload(payload);
 }
 
 // Property Services
@@ -167,9 +227,15 @@ export async function fetchProperties(filters = {}, options = {}) {
   const endpoint = queryString ? `/properties?${queryString}` : '/properties';
 
   const payload = await apiFetch(endpoint, options);
-  return payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')
-    ? payload
-    : { data: payload ?? [], meta: {} };
+
+  if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'meta')) {
+    return payload;
+  }
+
+  return {
+    data: normalizeApiPayload(payload) ?? [],
+    meta: {},
+  };
 }
 
 /**
