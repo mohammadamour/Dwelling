@@ -114,7 +114,7 @@ async function loadAndRenderProperties() {
     const json = await fetchFeaturedProperties(6);
     skeletons.forEach((s) => s.remove());
 
-    const list = (json && json.data) || [];
+    const list = Array.isArray(json) ? json : (json && json.data) || [];
     if (list.length === 0) {
       if (emptyEl) emptyEl.hidden = false;
       return;

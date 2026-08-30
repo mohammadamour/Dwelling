@@ -3,6 +3,10 @@
  * Modular API client for frontend-backend communication
  */
 
+
+// random real estate URL image for testing purposes
+// https://www.shutterstock.com/image-photo/discussion-real-estate-agent-house-model-2080599556
+
 // Base Configuration
 const DEFAULT_API_BASE_URL = 'http://localhost:5001/api';
 const API_BASE_URL =

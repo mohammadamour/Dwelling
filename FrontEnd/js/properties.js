@@ -176,8 +176,8 @@ async function loadProperties(page = 1, filters = {}) {
 
     if (loadingState) loadingState.hidden = true;
 
-    const properties = (response && response.data) || [];
-    const meta = response?.meta || {};
+    const properties = Array.isArray(response) ? response : (response && response.data) || [];
+    const meta = response && response.meta ? response.meta : {};
     const total = meta.total || 0;
     const pageSize = meta.limit || 9;
 
