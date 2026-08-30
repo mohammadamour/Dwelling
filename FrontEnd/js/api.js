@@ -70,6 +70,11 @@ export function getAuthUser() {
  * @returns {Promise<any>} Parsed JSON response
  */
 export async function apiFetch(endpoint, options = {}) {
+  if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
+    const message = 'The Dwelling frontend must be served over HTTP. Run a local server from the FrontEnd folder, e.g. python -m http.server 5500';
+    throw new Error(message);
+  }
+
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getAuthToken();
 
@@ -113,6 +118,18 @@ export async function apiFetch(endpoint, options = {}) {
   }
 }
 
+function unwrapPayload(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, 'data') && payload.data !== undefined) {
+    return payload.data;
+  }
+
+  return payload;
+}
+
 // Property Services
 /**
  * Fetch properties with optional filters
@@ -145,7 +162,10 @@ export async function fetchProperties(filters = {}, options = {}) {
   const queryString = queryParams.toString();
   const endpoint = queryString ? `/properties?${queryString}` : '/properties';
 
-  return apiFetch(endpoint, options);
+  const payload = await apiFetch(endpoint, options);
+  return payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')
+    ? payload
+    : { data: payload ?? [], meta: {} };
 }
 
 /**
@@ -154,7 +174,8 @@ export async function fetchProperties(filters = {}, options = {}) {
  * @returns {Promise<Object>} Property data with related info
  */
 export async function fetchPropertyById(id) {
-  return apiFetch(`/properties/${id}`);
+  const payload = await apiFetch(`/properties/${id}`);
+  return unwrapPayload(payload);
 }
 
 /**
@@ -163,7 +184,8 @@ export async function fetchPropertyById(id) {
  * @returns {Promise<Object>} Featured properties data
  */
 export async function fetchFeaturedProperties(limit = 6) {
-  return apiFetch(`/properties/featured?limit=${limit}`);
+  const payload = await apiFetch(`/properties/featured?limit=${limit}`);
+  return unwrapPayload(payload);
 }
 
 /**
@@ -180,10 +202,12 @@ export async function fetchPropertyStats() {
  * @returns {Promise<Object>} Created property data
  */
 export async function createProperty(propertyData) {
-  return apiFetch('/properties', {
+  const payload = await apiFetch('/properties', {
     method: 'POST',
     body: JSON.stringify(propertyData),
   });
+
+  return unwrapPayload(payload);
 }
 
 // Auth Services
@@ -195,10 +219,12 @@ export async function createProperty(propertyData) {
  * @returns {Promise<Object>} Response with user data and token
  */
 export async function loginUser(credentials) {
-  const data = await apiFetch('/auth/login', {
+  const payload = await apiFetch('/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   });
+
+  const data = unwrapPayload(payload);
 
   // Store token if returned
   if (data.token) {
@@ -219,10 +245,12 @@ export async function loginUser(credentials) {
  * @returns {Promise<Object>} Response with user data and token
  */
 export async function registerUser(userData) {
-  const data = await apiFetch('/auth/register', {
+  const payload = await apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify(userData),
   });
+
+  const data = unwrapPayload(payload);
 
   // Store token if returned
   if (data.token) {
@@ -247,7 +275,8 @@ export async function logoutUser() {
  * @returns {Promise<Object>} User profile data
  */
 export async function fetchCurrentUser() {
-  return apiFetch('/auth/me');
+  const payload = await apiFetch('/auth/me');
+  return unwrapPayload(payload);
 }
 
 // User Services
@@ -262,10 +291,12 @@ export async function fetchCurrentUser() {
  * @returns {Promise<Object>} Updated user profile data
  */
 export async function updateUserProfile(profileData) {
-  return apiFetch('/users/me', {
+  const payload = await apiFetch('/users/me', {
     method: 'PUT',
     body: JSON.stringify(profileData),
   });
+
+  return unwrapPayload(payload);
 }
 
 // Export all functions as a default object for convenience

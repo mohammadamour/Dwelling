@@ -96,8 +96,8 @@ function initAddPropertyForm() {
     form.classList.add('auth-form--loading');
 
     try {
-      const response = await createProperty(propertyData);
-      
+      const createdProperty = await createProperty(propertyData);
+
       // Remove loading state
       form.classList.remove('auth-form--loading');
 
@@ -106,10 +106,12 @@ function initAddPropertyForm() {
         successMessage.hidden = false;
       }
 
-      // Redirect to details page
+      const propertyId = createdProperty && createdProperty.id ? createdProperty.id : null;
+
+      // Redirect to details page only after the created record is actually available
       setTimeout(() => {
-        if (response && response.data && response.data.id) {
-          window.location.href = `property-details.html?id=${response.data.id}`;
+        if (propertyId) {
+          window.location.href = `property-details.html?id=${propertyId}`;
         } else {
           window.location.href = '../index.html';
         }

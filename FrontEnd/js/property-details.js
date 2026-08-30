@@ -56,10 +56,10 @@ async function loadPropertyDetails() {
 
   try {
     const property = await fetchPropertyById(propertyId);
-    
+
     if (loadingState) loadingState.hidden = true;
 
-    if (!property) {
+    if (!property || !property.id) {
       if (errorState) errorState.hidden = false;
       return;
     }
