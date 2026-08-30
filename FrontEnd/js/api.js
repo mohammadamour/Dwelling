@@ -4,7 +4,10 @@
  */
 
 // Base Configuration
-const API_BASE_URL = 'http://localhost:5001/api';
+const DEFAULT_API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL =
+  (typeof window !== 'undefined' && (window.__DWELLING_API_BASE_URL__ || window.DWELLING_API_BASE_URL)) ||
+  DEFAULT_API_BASE_URL;
 
 // Token Management
 const TOKEN_KEY = 'dwelling_auth_token';
@@ -129,7 +132,7 @@ export async function apiFetch(endpoint, options = {}) {
  * @param {number} filters.limit - Items per page (default 10)
  * @returns {Promise<Object>} Response with data and meta pagination info
  */
-export async function fetchProperties(filters = {}) {
+export async function fetchProperties(filters = {}, options = {}) {
   const queryParams = new URLSearchParams();
 
   // Build query string from filters
@@ -142,7 +145,7 @@ export async function fetchProperties(filters = {}) {
   const queryString = queryParams.toString();
   const endpoint = queryString ? `/properties?${queryString}` : '/properties';
 
-  return apiFetch(endpoint);
+  return apiFetch(endpoint, options);
 }
 
 /**

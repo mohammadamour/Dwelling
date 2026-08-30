@@ -155,6 +155,10 @@
   gap: var(--s-6);
   margin-bottom: var(--s-8);
 }
+
+.properties-page__loading[hidden] {
+  display: none !important;
+}
 @media (min-width: 640px) {
   .properties-page__loading {
     grid-template-columns: repeat(2, 1fr);

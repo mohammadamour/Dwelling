@@ -11,6 +11,8 @@ let currentPage = 1;
 let totalPages = 1;
 let currentFilters = {};
 let debounceTimer = null;
+let activeLoadController = null;
+let activeRequestToken = 0;
 
 // Property card rendering (same as landing page)
 function tagForProperty(p, idx) {
@@ -146,6 +148,14 @@ async function loadProperties(page = 1, filters = {}) {
 
   if (!grid) return;
 
+  if (activeLoadController) {
+    activeLoadController.abort();
+  }
+
+  activeRequestToken += 1;
+  const requestToken = activeRequestToken;
+  activeLoadController = new AbortController();
+
   // Show loading, hide results
   if (loadingState) loadingState.hidden = false;
   if (emptyState) emptyState.hidden = true;
@@ -158,22 +168,26 @@ async function loadProperties(page = 1, filters = {}) {
       limit: 9
     };
 
-    const response = await fetchProperties(params);
-    
+    const response = await fetchProperties(params, { signal: activeLoadController.signal });
+
+    if (requestToken !== activeRequestToken) {
+      return;
+    }
+
     if (loadingState) loadingState.hidden = true;
 
     const properties = (response && response.data) || [];
     const meta = response?.meta || {};
     const total = meta.total || 0;
     const pageSize = meta.limit || 9;
-    
+
     currentPage = meta.page || 1;
     totalPages = Math.ceil(total / pageSize);
 
     // Update results count
     const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
     const end = Math.min(currentPage * pageSize, total);
-    
+
     if (resultsStart) resultsStart.textContent = start;
     if (resultsEnd) resultsEnd.textContent = end;
     if (resultsTotal) resultsTotal.textContent = total;
@@ -211,12 +225,26 @@ async function loadProperties(page = 1, filters = {}) {
     updatePagination();
 
   } catch (error) {
+    if (error?.name === 'AbortError') {
+      return;
+    }
+
     console.error('Failed to load properties:', error);
-    if (loadingState) loadingState.hidden = true;
+    if (requestToken === activeRequestToken && loadingState) loadingState.hidden = true;
     if (emptyState) {
-      emptyState.querySelector('.properties-page__empty-title').textContent = 'Failed to load properties';
-      emptyState.querySelector('.properties-page__empty-text').textContent = 'Please try again later.';
+      const emptyTitle = emptyState.querySelector('.properties-page__empty-title');
+      const emptyText = emptyState.querySelector('.properties-page__empty-text');
+      if (emptyTitle) emptyTitle.textContent = 'Failed to load properties';
+      if (emptyText) {
+        emptyText.textContent = error instanceof Error && error.message
+          ? error.message
+          : 'Please try again later.';
+      }
       emptyState.hidden = false;
+    }
+  } finally {
+    if (activeLoadController && requestToken === activeRequestToken) {
+      activeLoadController = null;
     }
   }
 }
