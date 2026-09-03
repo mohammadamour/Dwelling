@@ -132,3 +132,38 @@ The database schema (`server/prisma/schema.prisma`) defines the following active
   - Keep controllers in `server/src/controllers/` and routes in `server/src/routes/`.
   - Do not use loose `any` types; prefer Prisma-generated types and Express Request/Response interfaces.
   - Never commit credentials, `.env` files, or production secrets to Git.
+
+---
+
+## 6. Recent Frontend Iterations & UI Architecture
+
+### Property Detail View (`FrontEnd/pages/property-details.html`)
+- **Two-Column Content Grid**:
+  - Main layout container (`.property-info`) enforces a two-column grid (`grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); gap: var(--s-8); align-items: start;`) on desktop (`>= 1024px`), collapsing to single-column (`1fr`) on tablet and mobile.
+  - **Left Column (`.property-info__main`)**: Houses the hero photo gallery (`.property-gallery`), property specifications grid, written description, and reviews section.
+  - **Right Sidebar Column (`.property-info__sidebar`)**: Houses the Agent Information Card (`.agent-card`) positioned at the top to align horizontally with the top edge of the primary hero image block, followed by the price & tour booking card (`.price-card`).
+
+### Agent Information Component & Interactive Inquiry Flow
+- **Consolidated Action**: Removed secondary "View Profile" button to eliminate clutter; elevated "Message Agent" as the primary full-width CTA.
+- **Inline Expandable Inquiry Form**: Clicking "Message Agent" toggles an inline inquiry textarea (`#agentInquiryForm`) with character counter (`0/300`), dynamic agent-specific placeholder, and Cancel/Send action buttons.
+- **Stateful Mock Submission**:
+  - Clicking "Send" validates input, disables form controls, and triggers an 800ms loading state with an animated inline spinner (`"Sending..."`).
+  - Upon completion, displays a green success confirmation badge (*"Message sent to [Agent Name]!"*).
+  - Automatically resets to default after 5 seconds or via manual "Send another inquiry" / "Cancel" without page reload.
+  - Handled purely via client-side component state machine (`initAgentInquiry()` in `FrontEnd/js/property-details.js`) without backend dependencies.
+
+### Established CSS & DOM Guidelines
+- **Strict CSS Scoping**: Avoid declaring generic component classes (such as `.agent-card`) with global `position: absolute` or transform rules in page-specific stylesheets. Page-specific positioning must always be scoped to its parent container (e.g. `.about__media .agent-card`).
+- **Explicit Layout Overrides**: Standalone cards used across multiple views must enforce `position: relative`, `right: auto`, `transform: none`, and `box-sizing: border-box` to sit flush within CSS grid columns.
+- **Resilient DOM Selectors**: Use explicit element IDs (`#openInquiryBtn`, `#agentInquiryForm`, `#agentInquirySuccess`) for interactive feature bindings to ensure resilience against layout adjustments.
+- **Property Review Component**:
+  - Review card items (`.review-card`) use scoped CSS internal padding (`padding: var(--s-5)`), flex column structure, and `word-break: break-word` / `overflow-wrap: break-word` on review body text (`.review-card__text`).
+  - Desktop view uses responsive indentation (`@media (min-width: 640px) { .review-card__body { padding-left: calc(44px + var(--s-3)); } }`) to align review text directly under author credentials.
+  - Reviewer avatars implement dynamic fallback placeholders (`.review-card__avatar-fallback`) with user initials and brand-tailored color themes when `avatarUrl` is null or fails to load, falling back to a neutral SVG icon when no name is provided.
+
+---
+
+## 7. Immediate Next Tasks
+
+1. **Realistic Review Mock Data Seeding**:
+   - Enrich `server/prisma/seed.ts` with varied, realistic review ratings, timestamps, and commentary across seeded properties.

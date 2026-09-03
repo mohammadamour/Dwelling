@@ -46,7 +46,8 @@ Dwelling employs a decoupled multi-page application (MPA) client communicating w
 ### 🔍 Property Catalog & Search
 - **Dynamic Filtering**: Filter listings by search keyword (`title`, `city`, `address`, `state`, `zip`), property type (`HOUSE`, `APT`, `CONDO`, `TOWNHOUSE`), price type (`RENT`, `SALE`), price range, bedrooms, bathrooms, and featured status.
 - **Server-Side Pagination & Sorting**: Paginated results with `page` and `limit`, sortable by price, date created, or featured priority.
-- **Single Property Details**: Rich detail view with multi-image gallery carousel, property specifications, agent profile card, and client reviews.
+- **Single Property Details**: Rich detail view featuring a responsive two-column content grid, interactive photo gallery carousel, property specifications, agent profile card, and client reviews.
+- **Interactive Agent Inquiry Flow**: Stateful client-side inquiry drawer with character counting, dynamic agent-specific placeholders, loading simulation, and feedback confirmations.
 
 ### 🔐 Hardened Authentication & Security
 - **Secure Password Hashing**: Passwords salted and hashed with `bcryptjs`.
@@ -59,7 +60,7 @@ Dwelling employs a decoupled multi-page application (MPA) client communicating w
 ### 🏢 Real Estate Agent Workflows
 - **Agent Role Guard**: Dedicated `POST /api/properties` endpoint restricted to authenticated agents and administrators.
 - **Property Publishing**: Listing creation form capturing property specs, pricing, address details, and image galleries.
-- **Agent Profiles**: Linked `AgentProfile` records tracking license numbers, agency names, years of experience, ratings, and total sales.
+- **Agent Profiles & Connections**: Linked `AgentProfile` records tracking license numbers, agency names, years of experience, ratings, and total sales, integrated directly into listing detail cards.
 
 ### 📊 Live Platform Metrics
 - **Real-Time Database Statistics**: Hero counters and platform statistics dynamically aggregated from PostgreSQL (total listings, active agents, covered cities, and average pricing).
@@ -69,14 +70,17 @@ Dwelling employs a decoupled multi-page application (MPA) client communicating w
 
 ## 🗺️ Roadmap & Upcoming Features
 
-The database schema ([schema.prisma](file:///c:/Users/somet/Downloads/Coding/Dwelling/server/prisma/schema.prisma)) and API layer already define foundational models and route stubs for the following planned features:
+The database schema ([schema.prisma](file:///c:/Users/somet/Downloads/Coding/Dwelling/server/prisma/schema.prisma)) and active API controllers define the following features and active development milestones:
 
-- [ ] **Tour Booking System (`TourBooking`)**: Schedule in-person and virtual property walkthroughs with status tracking (`REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
-- [ ] **Saved Favorites (`Favorite`)**: Authenticated user property bookmarking and personal saved listings collection.
-- [ ] **Review & Rating Authoring (`Review`)**: Form submission for 1–5 star ratings and verified buyer/renter feedback.
+- [x] **Tour Booking System (`TourBooking`)**: Schedule in-person and virtual walkthroughs with date/time picker and dashboard status tracking (`REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
+- [x] **Saved Favorites (`Favorite`)**: Authenticated user bookmarking with persistent toggle endpoints and profile collection view.
+- [x] **Reviews & Ratings System (`Review`)**: Interactive 5-star rating picker, verified reviews listing, and client-side review submission.
+- [x] **Interactive Agent Inquiry State**: Inline expandable messaging flow on the property details agent card with mock state machine and submission feedback.
+- [x] **Property Review Card UI Polish**: Resolve text wrapping and overflow handling within review cards, and implement reviewer avatar fallbacks.
+- [ ] **Enriched Review Mock Data**: Seed diverse reviews, ratings, and realistic reviewer commentary across listings.
 - [ ] **Cloud Storage Asset Pipeline**: Supabase Storage / S3 pre-signed upload URLs for direct client image uploads.
 - [ ] **Interactive Maps**: Mapbox / Leaflet integration utilizing property latitude and longitude coordinates.
-- [ ] **Real-Time Chat**: Direct messaging between home seekers and listing agents.
+- [ ] **Real-Time Agent Chat**: Persistent WebSocket direct messaging between home seekers and listing agents.
 
 ---
 
@@ -103,9 +107,9 @@ Base API URL: `http://localhost:5001/api`
 | `GET` | `/api/properties/stats` | Public | Aggregate platform property statistics |
 | `GET` | `/api/stats` | Public | Canonical alias for `/api/properties/stats` |
 | `POST` | `/api/properties` | Agent / Admin | Create a new property listing |
-| `POST` | `/api/properties/:id/tours` | Authenticated | *Stub:* Schedule tour booking |
-| `POST` | `/api/properties/:id/favorite` | Authenticated | *Stub:* Toggle saved property favorite |
-| `POST` | `/api/properties/:id/reviews` | Authenticated | *Stub:* Submit property rating & review |
+| `POST` | `/api/tours` | Authenticated | Schedule in-person or virtual walkthrough visit |
+| `POST` | `/api/favorites/:propertyId/toggle` | Authenticated | Toggle saved property bookmark status |
+| `POST` | `/api/properties/:id/reviews` | Authenticated | Submit property rating & review |
 | `POST` | `/api/newsletter` | Public | Subscribe email to newsletter updates |
 | `GET` | `/api/health` | Public | Server healthcheck probe |
 

@@ -194,6 +194,115 @@ async function loadPropertyDetails() {
   }
 }
 
+// Neutral user silhouette icon SVG for anonymous or missing-name fallbacks
+const USER_ICON_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
+// Brand-tailored harmonious avatar color palettes
+const REVIEWER_AVATAR_PALETTES = [
+  { bg: 'hsl(221 83% 95%)', color: 'hsl(221 83% 40%)', border: 'hsl(221 83% 85%)' }, // Primary blue
+  { bg: 'hsl(161 64% 92%)', color: 'hsl(161 72% 30%)', border: 'hsl(161 64% 78%)' }, // Emerald green
+  { bg: 'hsl(28 100% 93%)', color: 'hsl(20 95% 42%)', border: 'hsl(28 100% 80%)' },  // Coral accent
+  { bg: 'hsl(253 100% 95%)', color: 'hsl(253 82% 50%)', border: 'hsl(253 100% 84%)' }, // Violet
+  { bg: 'hsl(199 89% 93%)', color: 'hsl(199 89% 34%)', border: 'hsl(199 89% 80%)' }, // Ocean sky
+  { bg: 'hsl(330 81% 94%)', color: 'hsl(330 81% 42%)', border: 'hsl(330 81% 84%)' }, // Berry rose
+];
+
+// Simple HTML escaper to sanitize user-generated inputs in reviews
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Generate user initials for avatar fallback (e.g., "Mohammad Alamour" -> "MA", "Sarah" -> "S")
+function getReviewerInitials(name) {
+  if (!name || typeof name !== 'string') return '';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) {
+    return parts[0].slice(0, 1).toUpperCase();
+  }
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+// Deterministically pick an avatar palette based on author's name
+function getReviewerPalette(name = '') {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % REVIEWER_AVATAR_PALETTES.length;
+  return REVIEWER_AVATAR_PALETTES[index];
+}
+
+// Validate avatar URL against empty or legacy placeholder data URIs
+function isValidAvatarUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  // Guard against legacy blank SVG placeholders
+  if (trimmed.startsWith('data:image/svg+xml') && (trimmed.includes('width=%2240%22') || trimmed.includes('width="40"') || trimmed.length < 120)) {
+    return false;
+  }
+  return true;
+}
+
+// Format review submission date
+function formatReviewDate(dateStr) {
+  if (!dateStr) return 'Recently';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Recently';
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch (_e) {
+    return 'Recently';
+  }
+}
+
+// Render reviewer avatar with dynamic initials fallback & error recovery
+function renderReviewAvatar(reviewer) {
+  const name = reviewer?.name || 'Home Seeker';
+  const initials = getReviewerInitials(name);
+  const palette = getReviewerPalette(name);
+  const avatarUrl = reviewer?.avatarUrl?.trim();
+  const hasValidAvatar = isValidAvatarUrl(avatarUrl);
+  const fallbackInner = initials || USER_ICON_SVG;
+
+  if (hasValidAvatar) {
+    return `
+      <div class="review-card__avatar-wrap">
+        <img 
+          src="${escapeHtml(avatarUrl)}" 
+          alt="${escapeHtml(name)}" 
+          class="review-card__avatar" 
+          loading="lazy"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        />
+        <div class="review-card__avatar-fallback" style="display: none; background: ${palette.bg}; color: ${palette.color}; border: 1px solid ${palette.border};" aria-hidden="true">
+          ${fallbackInner}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="review-card__avatar-wrap">
+      <div class="review-card__avatar-fallback" style="background: ${palette.bg}; color: ${palette.color}; border: 1px solid ${palette.border};" aria-label="${escapeHtml(name)}">
+        ${fallbackInner}
+      </div>
+    </div>
+  `;
+}
+
 // Render reviews UI
 function renderReviews(reviews) {
   const ratingStars = $('#ratingStars');
@@ -207,26 +316,36 @@ function renderReviews(reviews) {
   if (ratingCount) ratingCount.textContent = reviews.length;
 
   if (reviewsList) {
-    if (reviews.length === 0) {
-      reviewsList.innerHTML = '<p style="color: var(--c-muted); padding: var(--s-3) 0;">No reviews yet. Be the first to share your experience!</p>';
+    if (!reviews || reviews.length === 0) {
+      reviewsList.innerHTML = '<p class="reviews-list__empty">No reviews yet. Be the first to share your experience!</p>';
     } else {
-      reviewsList.innerHTML = reviews.map((review) => `
-        <div class="review-card" style="padding: var(--s-4) 0; border-bottom: 1px solid var(--c-border);">
-          <div class="review-card__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-2);">
-            <div style="display: flex; align-items: center; gap: var(--s-3);">
-              <img src="${review.reviewer?.avatarUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22/%3E'}" alt="${review.reviewer?.name || 'User'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
-              <div>
-                <p style="font-weight: 600; margin: 0;">${review.reviewer?.name || 'Home Seeker'}</p>
-                <p style="font-size: var(--text-xs); color: var(--c-muted); margin: 0;">${new Date(review.createdAt).toLocaleDateString()}</p>
+      reviewsList.innerHTML = reviews.map((review) => {
+        const reviewer = review.reviewer || {};
+        const authorName = reviewer.name || 'Home Seeker';
+        const formattedDate = formatReviewDate(review.createdAt);
+        const isoDate = review.createdAt ? new Date(review.createdAt).toISOString() : '';
+        const comment = review.comment || '';
+
+        return `
+          <article class="review-card">
+            <header class="review-card__header">
+              <div class="review-card__reviewer">
+                ${renderReviewAvatar(reviewer)}
+                <div class="review-card__author">
+                  <h4 class="review-card__name">${escapeHtml(authorName)}</h4>
+                  <time class="review-card__date"${isoDate ? ` datetime="${escapeHtml(isoDate)}"` : ''}>${escapeHtml(formattedDate)}</time>
+                </div>
               </div>
+              <div class="review-card__rating" aria-label="${review.rating || 5} out of 5 stars">
+                ${renderStars(review.rating || 5)}
+              </div>
+            </header>
+            <div class="review-card__body">
+              <p class="review-card__text">${escapeHtml(comment)}</p>
             </div>
-            <div style="color: #F59E0B; display: flex; align-items: center; gap: 2px;">
-              ${renderStars(review.rating)}
-            </div>
-          </div>
-          <p style="margin: 0; color: var(--c-text); font-size: var(--text-sm); line-height: 1.6;">${review.comment || ''}</p>
-        </div>
-      `).join('');
+          </article>
+        `;
+      }).join('');
     }
   }
 }
