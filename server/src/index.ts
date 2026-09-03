@@ -3,6 +3,7 @@ dotenv.config();
 import express = require('express');
 import cors = require('cors');
 import { PrismaClient } from '@prisma/client';
+import { getAllowedOrigins, PORT, NODE_ENV } from './config/env';
 import propertyRoutes = require('./routes/propertyRoutes');
 import statsRoutes = require('./routes/stats');
 import authRoutes = require('./routes/auth');
@@ -10,13 +11,32 @@ import userRoutes = require('./routes/userRoutes');
 
 const prisma = new PrismaClient();
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Security: Dynamic CORS configuration based on environment variables
+const allowedOrigins = getAllowedOrigins();
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500'],
+  origin: (origin, callback) => {
+    // Allow non-browser requests (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Whitelist check
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // In non-production environments, allow local development ports
+    if (NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
+
 app.use(express.json());
 
 // Make prisma available to routes via request object
@@ -68,10 +88,14 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Error handler
+// Error handler (Hardened to avoid leaking raw database error messages in production)
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Server error:', err);
-  res.status(500).json({ error: 'Internal server error', message: err?.message });
+  const isDev = NODE_ENV === 'development';
+  res.status(500).json({
+    error: 'Internal server error',
+    ...(isDev && err?.message ? { message: err.message } : {})
+  });
 });
 
 // Start server
@@ -86,6 +110,7 @@ async function startServer() {
       console.log(`   Health check: http://localhost:${PORT}/api/health`);
       console.log(`   Properties:   http://localhost:${PORT}/api/properties`);
       console.log(`   Stats:        http://localhost:${PORT}/api/stats`);
+      console.log(`   CORS Origins: ${allowedOrigins.join(', ')}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
@@ -98,6 +123,11 @@ startServer();
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });

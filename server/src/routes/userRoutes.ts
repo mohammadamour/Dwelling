@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
-import { getUserProfile, updateUserProfile } from '../controllers/userController';
+import { authenticate, requireRole } from '../middleware/auth';
+import { getUserProfile, updateUserProfile, updateUserRole } from '../controllers/userController';
 
 const router = Router();
 
@@ -15,5 +15,11 @@ router.get('/me', authenticate, getUserProfile);
  * Update the currently authenticated user's profile
  */
 router.put('/me', authenticate, updateUserProfile);
+
+/**
+ * PATCH /api/users/:id/role
+ * Admin-only role assignment endpoint
+ */
+router.patch('/:id/role', authenticate, requireRole(['ADMIN']), updateUserRole);
 
 module.exports = router;

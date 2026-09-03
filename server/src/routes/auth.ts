@@ -1,55 +1,97 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { AuthRequest, authenticate } from '../middleware/auth';
+import { JWT_SECRET } from '../config/env';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Robust email validation regex (RFC 5322 compliant subset)
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
 /**
  * POST /api/auth/register
- * Register a new user
+ * Register a new user account with role sanitization and security checks.
  */
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, password, name, phone, role } = req.body;
+    const { email, password, name, phone, role, isAdmin } = req.body || {};
 
-    // Validation
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Email, password, and name are required' });
+    // 1. Core input validations
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
     }
 
-    if (!email.includes('@')) {
-      return res.status(400).json({ error: 'Invalid email format' });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(normalizedEmail) || normalizedEmail.length > 255) {
+      return res.status(400).json({ error: 'Please provide a valid email format.' });
+    }
+
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Password is required.' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
     }
+
+    if (password.length > 100) {
+      return res.status(400).json({ error: 'Password exceeds maximum length limit.' });
+    }
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Full name is required.' });
+    }
+
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Name must be between 2 and 100 characters.' });
+    }
+
+    // 2. Privilege escalation prevention
+    // Explicitly reject any client attempt to self-assign administrative roles
+    if (
+      (typeof role === 'string' && role.trim().toUpperCase() === 'ADMIN') ||
+      isAdmin === true ||
+      isAdmin === 'true'
+    ) {
+      return res.status(403).json({
+        error: 'Administrative privileges cannot be assigned via registration. Standard accounts only.'
+      });
+    }
+
+    // Strictly sanitize role: default strictly to SEEKER; allow AGENT only if explicitly requested
+    let assignedRole: Role = Role.SEEKER;
+    if (typeof role === 'string' && role.trim().toUpperCase() === 'AGENT') {
+      assignedRole = Role.AGENT;
+    }
+
+    const sanitizedPhone = typeof phone === 'string' && phone.trim().length > 0 ? phone.trim().substring(0, 30) : null;
 
     const prisma = (req as any).prisma as PrismaClient;
 
-    // Check if user already exists
+    // 3. Uniqueness check
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists' });
+      return res.status(409).json({ error: 'An account with this email address already exists.' });
     }
 
-    // Hash password
+    // 4. Secure password hashing
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Create user
+    // 5. Create user record
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         passwordHash,
-        name,
-        phone: phone || null,
-        role: role || 'SEEKER'
+        name: trimmedName,
+        phone: sanitizedPhone,
+        role: assignedRole,
       },
       select: {
         id: true,
@@ -59,15 +101,15 @@ router.post('/register', async (req: Request, res: Response) => {
         role: true,
         avatarUrl: true,
         bio: true,
-        createdAt: true
+        createdAt: true,
       }
     });
 
-    // Generate JWT token
+    // 6. Sign JWT token enforcing HS256 algorithm and explicit expiration
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', algorithm: 'HS256' }
     );
 
     res.status(201).json({
@@ -76,46 +118,47 @@ router.post('/register', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ error: 'Failed to register user' });
+    res.status(500).json({ error: 'Registration failed due to an internal server error.' });
   }
 });
 
 /**
  * POST /api/auth/login
- * Login an existing user
+ * Authenticate existing user with email and password.
  */
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ error: 'Email and password are required.' });
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     const prisma = (req as any).prisma as PrismaClient;
 
-    // Find user
+    // Find user by normalized email
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      // Use generic error message to prevent user enumeration
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Verify password
+    // Verify password against stored bcrypt hash
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    // Generate JWT token
+    // Generate JWT token with verified secret and explicit algorithm
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '7d', algorithm: 'HS256' }
     );
 
     const userResponse = {
@@ -135,18 +178,18 @@ router.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    res.status(500).json({ error: 'Login failed due to an internal server error.' });
   }
 });
 
 /**
  * GET /api/auth/me
- * Get current user profile (requires authentication)
+ * Get current authenticated user profile
  */
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Authentication required.' });
     }
 
     const prisma = (req as any).prisma as PrismaClient;
@@ -183,13 +226,13 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'User profile not found.' });
     }
 
     res.status(200).json(user);
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to get user profile' });
+    res.status(500).json({ error: 'Failed to retrieve user profile.' });
   }
 });
 
