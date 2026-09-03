@@ -114,6 +114,10 @@ router.post('/register', async (req: Request, res: Response) => {
     );
 
     res.status(201).json({
+      data: {
+        user,
+        token
+      },
       user,
       token
     });
@@ -174,6 +178,10 @@ router.post('/login', async (req: Request, res: Response) => {
     };
 
     res.status(200).json({
+      data: {
+        user: userResponse,
+        token
+      },
       user: userResponse,
       token
     });

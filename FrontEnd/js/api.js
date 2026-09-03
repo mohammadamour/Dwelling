@@ -94,7 +94,12 @@ export function normalizeApiPayload(payload) {
     return payload.data;
   }
 
-  if (Object.prototype.hasOwnProperty.call(payload, 'user') && payload.user !== undefined) {
+  // Preserve composite auth session payloads; do not strip token or other session data
+  if (
+    Object.prototype.hasOwnProperty.call(payload, 'user') &&
+    payload.user !== undefined &&
+    !Object.prototype.hasOwnProperty.call(payload, 'token')
+  ) {
     return payload.user;
   }
 
@@ -293,13 +298,13 @@ export async function loginUser(credentials) {
     body: JSON.stringify(credentials),
   });
 
-  const data = unwrapPayload(payload);
-
-  // Store token if returned
-  if (data.token) {
-    setAuthToken(data.token);
+  // Extract and persist token directly from root response or data envelope before unwrapping
+  const token = payload?.token || payload?.data?.token;
+  if (token) {
+    setAuthToken(token);
   }
 
+  const data = unwrapPayload(payload);
   return data;
 }
 
@@ -319,13 +324,13 @@ export async function registerUser(userData) {
     body: JSON.stringify(userData),
   });
 
-  const data = unwrapPayload(payload);
-
-  // Store token if returned
-  if (data.token) {
-    setAuthToken(data.token);
+  // Extract and persist token directly from root response or data envelope before unwrapping
+  const token = payload?.token || payload?.data?.token;
+  if (token) {
+    setAuthToken(token);
   }
 
+  const data = unwrapPayload(payload);
   return data;
 }
 
