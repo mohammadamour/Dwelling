@@ -161,9 +161,17 @@ The database schema (`server/prisma/schema.prisma`) defines the following active
   - Desktop view uses responsive indentation (`@media (min-width: 640px) { .review-card__body { padding-left: calc(44px + var(--s-3)); } }`) to align review text directly under author credentials.
   - Reviewer avatars implement dynamic fallback placeholders (`.review-card__avatar-fallback`) with user initials and brand-tailored color themes when `avatarUrl` is null or fails to load, falling back to a neutral SVG icon when no name is provided.
 
+- **Realistic Review Mock Data Seeding**:
+  - Modular Review Factory in `server/prisma/factories/reviewFactory.ts` generates realistic, authentic property reviews strictly avoiding lorem ipsum.
+  - Sourced reviewers directly from verified agent user accounts with high-resolution Unsplash headshots.
+  - Generates a believable positive distribution (~65% 5-star, ~25% 4-star, ~10% 3-star) with 2–5 reviews per property listing.
+  - Integrated into main seed (`npm run db:seed`) and standalone re-seed (`npm run db:seed:reviews`).
+
 ---
 
 ## 7. Immediate Next Tasks
 
-1. **Realistic Review Mock Data Seeding**:
-   - Enrich `server/prisma/seed.ts` with varied, realistic review ratings, timestamps, and commentary across seeded properties.
+1. **Cloud Storage Asset Pipeline**:
+   - Integrate Supabase Storage or S3 pre-signed upload URLs for direct client property image and avatar uploads.
+2. **Interactive Maps**:
+   - Leaflet or Mapbox integration on property catalog and detail pages utilizing latitude and longitude coordinates.

@@ -1,6 +1,7 @@
 import { PrismaClient, PropertyType, PriceType, PropertyStatus, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker';
+import { seedPropertyReviews } from './factories/reviewFactory';
 
 const prisma = new PrismaClient();
 
@@ -150,85 +151,180 @@ async function main() {
   console.log('   • Creating test users with hashed passwords...');
   const passwordHash = await bcrypt.hash('password123', 10);
   
-  const [user1, user2, user3] = await Promise.all([
-    prisma.user.create({
-      data: {
-        email: 'testuser1@example.com',
-        passwordHash,
-        name: 'Test User One',
-        phone: faker.phone.number(),
-        role: Role.SEEKER,
-        avatarUrl: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`,
-        bio: faker.lorem.sentence(),
+  const user1 = await prisma.user.create({
+    data: {
+      email: 'testuser1@example.com',
+      passwordHash,
+      name: 'Test User One',
+      phone: faker.phone.number(),
+      role: Role.SEEKER,
+      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
+      bio: faker.lorem.sentence(),
+    },
+  });
+
+  const user2 = await prisma.user.create({
+    data: {
+      email: 'testuser2@example.com',
+      passwordHash,
+      name: 'Test User Two',
+      phone: faker.phone.number(),
+      role: Role.SEEKER,
+      avatarUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&auto=format&fit=crop&q=80',
+      bio: faker.lorem.sentence(),
+    },
+  });
+
+  const user3 = await prisma.user.create({
+    data: {
+      email: 'testagent@example.com',
+      passwordHash,
+      name: 'Test Agent',
+      phone: faker.phone.number(),
+      role: Role.AGENT,
+      avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80',
+      bio: 'Experienced real estate agent with a passion for architectural design and seamless client guidance.',
+      agentProfile: {
+        create: {
+          licenseNumber: faker.string.alphanumeric(10),
+          yearsExperience: faker.number.int({ min: 5, max: 15 }),
+          rating: 4.9,
+          agencyName: 'Dwelling Premier Properties',
+          totalSales: faker.number.int({ min: 50, max: 200 }),
+          specializations: ['Residential', 'Commercial', 'Luxury Homes'],
+        },
       },
-    }),
-    prisma.user.create({
+    },
+  });
+
+  console.log('   • Creating curated real estate agents with verified profile headshots...');
+  const CURATED_AGENTS = [
+    {
+      name: 'Sarah Jenkins',
+      email: 'sarah.jenkins@dwelling.com',
+      phone: '+1 (555) 234-5678',
+      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+      bio: 'Top-producing residential specialist with 12+ years guiding clients through competitive urban markets.',
+      agencyName: 'Vanguard Realty Group',
+      yearsExperience: 12,
+      rating: 4.9,
+      totalSales: 148,
+      specializations: ['Luxury Homes', 'Residential', 'Relocation'],
+    },
+    {
+      name: 'Marcus Vance',
+      email: 'marcus.vance@dwelling.com',
+      phone: '+1 (555) 345-6789',
+      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
+      bio: 'Dedicated urban condo and townhouse expert focused on modern architecture and transit-friendly neighborhoods.',
+      agencyName: 'Metropolitan Real Estate',
+      yearsExperience: 8,
+      rating: 4.8,
+      totalSales: 92,
+      specializations: ['Condos', 'Townhouses', 'First-Time Buyers'],
+    },
+    {
+      name: 'Elena Rostova',
+      email: 'elena.rostova@dwelling.com',
+      phone: '+1 (555) 456-7890',
+      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80',
+      bio: 'Luxury estate advisor specializing in waterfront villas, historic restorations, and architectural marvels.',
+      agencyName: 'Premier Sotheby International',
+      yearsExperience: 15,
+      rating: 5.0,
+      totalSales: 210,
+      specializations: ['Luxury Estates', 'Waterfront', 'Historic Homes'],
+    },
+    {
+      name: 'David Chen',
+      email: 'david.chen@dwelling.com',
+      phone: '+1 (555) 567-8901',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+      bio: 'Analytical property advisor combining market trend expertise with client-first negotiation strategies.',
+      agencyName: 'Compass Horizon Realty',
+      yearsExperience: 6,
+      rating: 4.7,
+      totalSales: 64,
+      specializations: ['Investment', 'Multi-Family', 'Residential'],
+    },
+    {
+      name: 'Amara Okafor',
+      email: 'amara.okafor@dwelling.com',
+      phone: '+1 (555) 678-9012',
+      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+      bio: 'Passionate neighborhood advocate helping families discover quiet, community-centric suburban living.',
+      agencyName: 'Oak & Stone Properties',
+      yearsExperience: 9,
+      rating: 4.9,
+      totalSales: 115,
+      specializations: ['Suburban Homes', 'Family Estates', 'New Construction'],
+    },
+    {
+      name: 'Julian Montgomery',
+      email: 'julian.montgomery@dwelling.com',
+      phone: '+1 (555) 789-0123',
+      avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80',
+      bio: 'Commercial and luxury residential broker known for seamless transactions and discreet representation.',
+      agencyName: 'Beacon Hill Partners',
+      yearsExperience: 14,
+      rating: 4.8,
+      totalSales: 178,
+      specializations: ['Commercial', 'Luxury Homes', 'Penthouse'],
+    },
+    {
+      name: 'Chloe Dubois',
+      email: 'chloe.dubois@dwelling.com',
+      phone: '+1 (555) 890-1234',
+      avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
+      bio: 'Boutique real estate consultant with an eye for interior design, staging, and modern architectural potential.',
+      agencyName: 'Atelier Living Realty',
+      yearsExperience: 7,
+      rating: 4.9,
+      totalSales: 83,
+      specializations: ['Lofts', 'Design-Forward Homes', 'Rentals'],
+    },
+    {
+      name: 'Robert Sterling',
+      email: 'robert.sterling@dwelling.com',
+      phone: '+1 (555) 901-2345',
+      avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
+      bio: 'Experienced relocation consultant and veteran broker committed to transparent, stress-free home transitions.',
+      agencyName: 'Sterling Heritage Realty',
+      yearsExperience: 18,
+      rating: 4.9,
+      totalSales: 260,
+      specializations: ['Relocation', 'Single Family', 'Investment'],
+    },
+  ];
+
+  const agentPassword = await bcrypt.hash('agent123', 10);
+  const createdAgents = [];
+  for (const agentData of CURATED_AGENTS) {
+    const agentUser = await prisma.user.create({
       data: {
-        email: 'testuser2@example.com',
-        passwordHash,
-        name: 'Test User Two',
-        phone: faker.phone.number(),
-        role: Role.SEEKER,
-        avatarUrl: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`,
-        bio: faker.lorem.sentence(),
-      },
-    }),
-    prisma.user.create({
-      data: {
-        email: 'testagent@example.com',
-        passwordHash,
-        name: 'Test Agent',
-        phone: faker.phone.number(),
+        email: agentData.email,
+        passwordHash: agentPassword,
+        name: agentData.name,
+        phone: agentData.phone,
         role: Role.AGENT,
-        avatarUrl: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`,
-        bio: 'Experienced real estate agent',
+        avatarUrl: agentData.avatarUrl,
+        bio: agentData.bio,
         agentProfile: {
           create: {
-            licenseNumber: faker.string.alphanumeric(10),
-            yearsExperience: faker.number.int({ min: 3, max: 15 }),
-            rating: faker.number.float({ min: 3.5, max: 5.0, fractionDigits: 1 }),
-            agencyName: faker.company.name(),
-            totalSales: faker.number.int({ min: 20, max: 200 }),
-            specializations: ['Residential', 'Commercial'],
+            licenseNumber: faker.string.alphanumeric(10).toUpperCase(),
+            yearsExperience: agentData.yearsExperience,
+            rating: agentData.rating,
+            agencyName: agentData.agencyName,
+            totalSales: agentData.totalSales,
+            specializations: agentData.specializations,
           },
         },
       },
-    }),
-  ]);
+    });
+    createdAgents.push(agentUser);
+  }
 
-  console.log('   • Creating agents...');
-  const agents = await Promise.all(
-    Array.from({ length: 4 }, async () => {
-      const agentPassword = await bcrypt.hash('agent123', 10);
-      return prisma.user.create({
-        data: {
-          email: faker.internet.email(),
-          passwordHash: agentPassword,
-          name: faker.person.fullName(),
-          phone: faker.phone.number(),
-          role: Role.AGENT,
-          avatarUrl: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`,
-          bio: faker.lorem.sentence(),
-          agentProfile: {
-            create: {
-              licenseNumber: faker.string.alphanumeric(10),
-              yearsExperience: faker.number.int({ min: 2, max: 20 }),
-              rating: faker.number.float({ min: 3.0, max: 5.0, fractionDigits: 1 }),
-              agencyName: faker.company.name(),
-              totalSales: faker.number.int({ min: 10, max: 300 }),
-              specializations: faker.helpers.arrayElements([
-                'Luxury Homes',
-                'Commercial',
-                'Residential',
-                'Rentals',
-                'Investment',
-              ], { min: 1, max: 3 }),
-            },
-          },
-        },
-      });
-    })
-  );
+  const agents = [user3, ...createdAgents];
 
   console.log('   • Generating 18 properties with varied data...');
   const properties: PropertyInput[] = [];
@@ -282,7 +378,7 @@ async function main() {
     });
   }
 
-  console.log('   • Adding sample favorites and reviews...');
+  console.log('   • Adding sample favorites...');
   const allProps = await prisma.property.findMany({ take: 5 });
   
   if (allProps[0]) {
@@ -295,26 +391,8 @@ async function main() {
     await prisma.favorite.create({ data: { userId: user2.id, propertyId: allProps[2].id } });
   }
 
-  if (allProps[0]) {
-    await prisma.review.create({
-      data: {
-        propertyId: allProps[0].id,
-        reviewerId: user1.id,
-        rating: faker.number.int({ min: 4, max: 5 }),
-        comment: faker.lorem.paragraph(),
-      },
-    });
-  }
-  if (allProps[1]) {
-    await prisma.review.create({
-      data: {
-        propertyId: allProps[1].id,
-        reviewerId: user2.id,
-        rating: faker.number.int({ min: 3, max: 5 }),
-        comment: faker.lorem.paragraph(),
-      },
-    });
-  }
+  // Seed 2 to 5 realistic reviews per property using the Review Factory
+  await seedPropertyReviews(prisma);
 
   await prisma.newsletterSubscriber.createMany({
     data: Array.from({ length: 5 }, () => ({

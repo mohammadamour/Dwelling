@@ -77,7 +77,7 @@ The database schema ([schema.prisma](file:///c:/Users/somet/Downloads/Coding/Dwe
 - [x] **Reviews & Ratings System (`Review`)**: Interactive 5-star rating picker, verified reviews listing, and client-side review submission.
 - [x] **Interactive Agent Inquiry State**: Inline expandable messaging flow on the property details agent card with mock state machine and submission feedback.
 - [x] **Property Review Card UI Polish**: Resolve text wrapping and overflow handling within review cards, and implement reviewer avatar fallbacks.
-- [ ] **Enriched Review Mock Data**: Seed diverse reviews, ratings, and realistic reviewer commentary across listings.
+- [x] **Enriched Review Mock Data**: Seed diverse reviews, ratings, and realistic reviewer commentary across listings.
 - [ ] **Cloud Storage Asset Pipeline**: Supabase Storage / S3 pre-signed upload URLs for direct client image uploads.
 - [ ] **Interactive Maps**: Mapbox / Leaflet integration utilizing property latitude and longitude coordinates.
 - [ ] **Real-Time Agent Chat**: Persistent WebSocket direct messaging between home seekers and listing agents.
