@@ -150,8 +150,25 @@ export const getProperties = async (req: any, res: Response) => {
 
     const totalPages = Math.ceil(total / limit);
 
+    let favoritedSet = new Set<string>();
+    if (req.user?.id) {
+      const userFavs = await prisma.favorite.findMany({
+        where: {
+          userId: req.user.id,
+          propertyId: { in: properties.map((p) => p.id) },
+        },
+        select: { propertyId: true },
+      });
+      favoritedSet = new Set(userFavs.map((f) => f.propertyId));
+    }
+
+    const propertiesWithFavorites = properties.map((p) => ({
+      ...p,
+      isFavorite: favoritedSet.has(p.id),
+    }));
+
     res.json({
-      data: properties,
+      data: propertiesWithFavorites,
       meta: {
         total,
         page,
@@ -223,7 +240,25 @@ export const getPropertyById = async (req: any, res: Response) => {
       return res.status(404).json({ error: 'Property not found' });
     }
 
-    res.json({ data: property });
+    let isFavorite = false;
+    if (req.user?.id) {
+      const fav = await prisma.favorite.findUnique({
+        where: {
+          userId_propertyId: {
+            userId: req.user.id,
+            propertyId: id,
+          },
+        },
+      });
+      isFavorite = Boolean(fav);
+    }
+
+    res.json({
+      data: {
+        ...property,
+        isFavorite,
+      },
+    });
   } catch (error) {
     console.error('GET /api/properties/:id error:', error);
     res.status(500).json({ error: 'Failed to fetch property details' });
@@ -409,74 +444,7 @@ export const createProperty = async (req: any, res: Response) => {
   }
 };
 
-/**
- * TODO: [Tour Booking System] - Planned implementation for scheduling in-person or virtual property tours
- * POST /api/properties/:id/tours
- */
-export const bookPropertyTour = async (req: any, res: Response) => {
-  try {
-    const propertyId = req.params.id;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required to schedule a tour' });
-    }
-
-    res.status(501).json({
-      message: 'Tour booking system is planned and currently under active development.',
-      propertyId,
-      userId,
-    });
-  } catch (error) {
-    console.error('Tour booking stub error:', error);
-    res.status(500).json({ error: 'Failed to process tour booking' });
-  }
-};
-
-/**
- * TODO: [Favorites System] - Planned implementation for toggling saved properties
- * POST /api/properties/:id/favorite
- */
-export const togglePropertyFavorite = async (req: any, res: Response) => {
-  try {
-    const propertyId = req.params.id;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required to save favorites' });
-    }
-
-    res.status(501).json({
-      message: 'Favorites persistence system is planned and currently under active development.',
-      propertyId,
-      userId,
-    });
-  } catch (error) {
-    console.error('Favorite toggle stub error:', error);
-    res.status(500).json({ error: 'Failed to process favorite toggle' });
-  }
-};
-
-/**
- * TODO: [Reviews System] - Planned implementation for submitting property feedback and star ratings
- * POST /api/properties/:id/reviews
- */
-export const createPropertyReview = async (req: any, res: Response) => {
-  try {
-    const propertyId = req.params.id;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required to submit a review' });
-    }
-
-    res.status(501).json({
-      message: 'Review authoring system is planned and currently under active development.',
-      propertyId,
-      userId,
-    });
-  } catch (error) {
-    console.error('Create review stub error:', error);
-    res.status(500).json({ error: 'Failed to submit review' });
-  }
-};
+// Re-export core entity controllers
+export { createTourBooking as bookPropertyTour } from './tourController';
+export { toggleFavorite as togglePropertyFavorite, addFavorite, removeFavorite } from './favoriteController';
+export { createPropertyReview, getPropertyReviews } from './reviewController';

@@ -8,8 +8,9 @@ import {
   bookPropertyTour,
   togglePropertyFavorite,
   createPropertyReview,
+  getPropertyReviews,
 } from '../controllers/propertyController';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate, requireRole, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,10 +22,10 @@ router.post('/', authenticate, requireRole(['AGENT', 'ADMIN']), createProperty);
 
 /**
  * GET /api/properties
- * Fetch properties with dynamic query filtering and pagination
- * Query params: search/q, city, type/propertyType, priceType, minPrice, maxPrice, beds, bathrooms/baths, featured, sortBy, order, page, limit
+ * Fetch properties with dynamic query filtering and pagination.
+ * optionalAuth attaches user context so isFavorite is flagged for authenticated users.
  */
-router.get('/', getProperties);
+router.get('/', optionalAuth, getProperties);
 
 /**
  * GET /api/properties/stats
@@ -35,31 +36,37 @@ router.get('/stats', getPropertyStats);
 /**
  * GET /api/properties/featured
  * Return featured listings for the home page
- * Query params: limit (default 6, max 20)
  */
 router.get('/featured', getFeaturedProperties);
 
 /**
  * GET /api/properties/:id
- * Fetch a single property by its ID with related data (agent, images, reviews)
+ * Fetch a single property by its ID with related data (agent, images, reviews).
+ * optionalAuth attaches user context so isFavorite is flagged for authenticated users.
  */
-router.get('/:id', getPropertyById);
+router.get('/:id', optionalAuth, getPropertyById);
 
 /**
- * TODO: [Tour Booking System] - Planned endpoint for booking in-person/virtual property tours
  * POST /api/properties/:id/tours
+ * Schedule a visit/tour for a property
  */
 router.post('/:id/tours', authenticate, bookPropertyTour);
 
 /**
- * TODO: [Favorites System] - Planned endpoint for toggling property bookmarks
  * POST /api/properties/:id/favorite
+ * Toggle favorite status for a property
  */
 router.post('/:id/favorite', authenticate, togglePropertyFavorite);
 
 /**
- * TODO: [Reviews System] - Planned endpoint for submitting property reviews
+ * GET /api/properties/:id/reviews
+ * Fetch reviews for a specific property
+ */
+router.get('/:id/reviews', getPropertyReviews);
+
+/**
  * POST /api/properties/:id/reviews
+ * Submit a review for a property
  */
 router.post('/:id/reviews', authenticate, createPropertyReview);
 

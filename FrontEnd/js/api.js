@@ -368,6 +368,149 @@ export async function updateUserProfile(profileData) {
   return unwrapPayload(payload);
 }
 
+// ============================================================================
+// Favorites Services
+// ============================================================================
+
+/**
+ * Toggle favorite status for a property
+ * @param {string} propertyId
+ * @returns {Promise<{ isFavorite: boolean, favoritesCount: number, message: string }>}
+ */
+export async function toggleFavorite(propertyId) {
+  return apiFetch(`/favorites/${encodeURIComponent(propertyId)}/toggle`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Add a property to favorites
+ * @param {string} propertyId
+ * @returns {Promise<Object>}
+ */
+export async function addFavorite(propertyId) {
+  return apiFetch(`/favorites/${encodeURIComponent(propertyId)}`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Remove a property from favorites
+ * @param {string} propertyId
+ * @returns {Promise<Object>}
+ */
+export async function removeFavorite(propertyId) {
+  return apiFetch(`/favorites/${encodeURIComponent(propertyId)}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Fetch all favorited properties for the logged-in user
+ * @returns {Promise<Array>} List of favorited properties
+ */
+export async function fetchMyFavorites() {
+  const payload = await apiFetch('/favorites/my');
+  return unwrapPayload(payload);
+}
+
+// ============================================================================
+// Tour Booking Services
+// ============================================================================
+
+/**
+ * Schedule a new property tour
+ * @param {Object} tourData
+ * @param {string} tourData.propertyId
+ * @param {string} tourData.tourDate - ISO date string
+ * @param {'IN_PERSON' | 'VIRTUAL'} [tourData.tourType='IN_PERSON']
+ * @param {string} [tourData.notes]
+ * @returns {Promise<Object>}
+ */
+export async function bookTour(tourData) {
+  const payload = await apiFetch('/tours', {
+    method: 'POST',
+    body: JSON.stringify(tourData),
+  });
+  return unwrapPayload(payload);
+}
+
+/**
+ * Fetch all tour bookings scheduled by the logged-in user
+ * @returns {Promise<Array>} List of scheduled tours
+ */
+export async function fetchMyTours() {
+  const payload = await apiFetch('/tours/my');
+  return unwrapPayload(payload);
+}
+
+/**
+ * Update the status of a tour booking
+ * @param {string} tourId
+ * @param {'REQUESTED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'} status
+ * @returns {Promise<Object>}
+ */
+export async function updateTourStatus(tourId, status) {
+  const payload = await apiFetch(`/tours/${encodeURIComponent(tourId)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+  return unwrapPayload(payload);
+}
+
+// ============================================================================
+// Reviews Services
+// ============================================================================
+
+/**
+ * Submit a rating and review for a property
+ * @param {string} propertyId
+ * @param {Object} reviewData
+ * @param {number} reviewData.rating - Integer from 1 to 5
+ * @param {string} reviewData.comment - Review text
+ * @returns {Promise<Object>}
+ */
+export async function createPropertyReview(propertyId, reviewData) {
+  const payload = await apiFetch(`/properties/${encodeURIComponent(propertyId)}/reviews`, {
+    method: 'POST',
+    body: JSON.stringify(reviewData),
+  });
+  return unwrapPayload(payload);
+}
+
+/**
+ * Fetch reviews for a property
+ * @param {string} propertyId
+ * @returns {Promise<Array>}
+ */
+export async function fetchPropertyReviews(propertyId) {
+  const payload = await apiFetch(`/properties/${encodeURIComponent(propertyId)}/reviews`);
+  return unwrapPayload(payload);
+}
+
+// ============================================================================
+// Agent Services
+// ============================================================================
+
+/**
+ * Fetch registered real estate agents
+ * @returns {Promise<Array>}
+ */
+export async function fetchAgents() {
+  const payload = await apiFetch('/agents');
+  return unwrapPayload(payload);
+}
+
+/**
+ * Fetch single agent profile by ID
+ * @param {string} agentId
+ * @returns {Promise<Object>}
+ */
+export async function fetchAgentById(agentId) {
+  const payload = await apiFetch(`/agents/${encodeURIComponent(agentId)}`);
+  return unwrapPayload(payload);
+}
+
 // Export all functions as a default object for convenience
 const api = {
   // Token management
@@ -395,6 +538,26 @@ const api = {
   
   // User services
   updateUserProfile,
+
+  // Favorites
+  toggleFavorite,
+  addFavorite,
+  removeFavorite,
+  fetchMyFavorites,
+
+  // Tours
+  bookTour,
+  fetchMyTours,
+  updateTourStatus,
+
+  // Reviews
+  createPropertyReview,
+  fetchPropertyReviews,
+
+  // Agents
+  fetchAgents,
+  fetchAgentById,
 };
 
 export default api;
+

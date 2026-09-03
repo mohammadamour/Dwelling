@@ -8,6 +8,9 @@ import propertyRoutes = require('./routes/propertyRoutes');
 import statsRoutes = require('./routes/stats');
 import authRoutes = require('./routes/auth');
 import userRoutes = require('./routes/userRoutes');
+import favoriteRoutes = require('./routes/favoriteRoutes');
+import tourRoutes = require('./routes/tourRoutes');
+import agentRoutes = require('./routes/agentRoutes');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -54,6 +57,9 @@ app.get('/', (_req, res) => {
 app.use('/api/auth', authRoutes as express.Router);
 app.use('/api/users', userRoutes as express.Router);
 app.use('/api/properties', propertyRoutes as express.Router);
+app.use('/api/favorites', favoriteRoutes as express.Router);
+app.use('/api/tours', tourRoutes as express.Router);
+app.use('/api/agents', agentRoutes as express.Router);
 app.use('/api', statsRoutes as express.Router);
 
 /**

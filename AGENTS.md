@@ -85,24 +85,40 @@ Both return:
 
 ---
 
-## 4. Foundational Stubs for Incomplete Features
+## 4. Domain Models & Core Subsystems
 
-The database schema (`server/prisma/schema.prisma`) defines several domain models whose API contracts are planned:
+The database schema (`server/prisma/schema.prisma`) defines the following active core domain subsystems:
 
-1. **Tour Booking System (`TourBooking`)**:
-   - Models: `TourType` (`IN_PERSON`, `VIRTUAL`), `TourStatus` (`REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
-   - Planned Routes: `POST /api/properties/:id/tours`, `GET /api/bookings/my`, `PATCH /api/bookings/:id/status`.
-
-2. **Favorites System (`Favorite`)**:
+1. **Favorites & Bookmarks System (`Favorite`)**:
    - Models: `Favorite` with composite unique index `@@unique([userId, propertyId])`.
-   - Planned Routes: `POST /api/properties/:id/favorite` (toggle), `GET /api/favorites/my`.
+   - Routes:
+     - `POST /api/favorites/:propertyId/toggle` (Toggle bookmark status)
+     - `POST /api/favorites/:propertyId` (Explicit add)
+     - `DELETE /api/favorites/:propertyId` (Explicit remove)
+     - `GET /api/favorites/my` (List all saved properties for current user)
+   - UI Integration: Heart icons on landing cards, catalog cards, and details page persist state to PostgreSQL and render filled/unfilled based on authentication.
+
+2. **Tour Booking System (`TourBooking`)**:
+   - Models: `TourType` (`IN_PERSON`, `VIRTUAL`), `TourStatus` (`REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
+   - Routes:
+     - `POST /api/tours` (Schedule in-person or virtual walkthrough visit)
+     - `GET /api/tours/my` (List user scheduled tours with property and agent relations)
+     - `PATCH /api/tours/:id/status` (Update status or cancel visit)
+   - UI Integration: "Schedule a Tour" modal on property details page with date, time, format selection, and user profile appointments dashboard.
 
 3. **Reviews & Ratings System (`Review`)**:
-   - Models: `Review` (ratings 1–5, comments, relations to property and reviewer).
-   - Planned Routes: `POST /api/properties/:id/reviews`, `GET /api/properties/:id/reviews`.
+   - Models: `Review` (ratings 1–5, comments, relation to property and reviewer).
+   - Routes:
+     - `POST /api/properties/:id/reviews` (Publish new rating and comment)
+     - `GET /api/properties/:id/reviews` (Fetch property reviews with reviewer profiles)
+   - UI Integration: Interactive 5-star rating picker and comment submission box on property details page.
 
-4. **Asset Upload Pipeline**:
-   - Property listing image uploads should be migrated from raw URL inputs to Supabase Storage or S3 pre-signed URLs.
+4. **Agent Profiles & Connections (`AgentProfile`)**:
+   - Models: `AgentProfile` linked one-to-one with `User` (`role: AGENT`).
+   - Routes:
+     - `GET /api/agents` (List agents with rating, license, experience, and listing count)
+     - `GET /api/agents/:id` (Single agent profile with active listings)
+   - UI Integration: Agent contact card on listing detail page displays agency name, ratings, phone, and email.
 
 ---
 

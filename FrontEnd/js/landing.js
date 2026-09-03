@@ -3,7 +3,7 @@
  * Dynamic property loading and interactions
  */
 
-import { fetchFeaturedProperties, fetchPropertyStats, apiFetch } from './api.js';
+import { fetchFeaturedProperties, fetchPropertyStats, apiFetch, toggleFavorite, isAuthenticated } from './api.js';
 import { $, $$, fmtCurrency } from './shared.js';
 
 // Property card rendering
@@ -66,10 +66,18 @@ function renderPropertyCard(p, idx) {
     '" loading="lazy" decoding="async" onerror="this.style.opacity=0.15;this.style.background=\'linear-gradient(135deg,#e2e8f0,#cbd5e1)\'" />' +
     '</a>' +
     tagHtml +
-    '<button type="button" class="property-card__fav" aria-label="Save ' +
+    '<button type="button" class="property-card__fav" data-id="' +
+    p.id +
+    '" aria-label="Save ' +
     safeTitle +
-    ' to favorites" aria-pressed="false">' +
-    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    ' to favorites" aria-pressed="' +
+    (p.isFavorite ? 'true' : 'false') +
+    '"' +
+    (p.isFavorite ? ' style="color: var(--c-accent);"' : '') +
+    '>' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="' +
+    (p.isFavorite ? 'currentColor' : 'none') +
+    '" aria-hidden="true">' +
     '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' +
     '</svg>' +
     '</button>' +
@@ -156,23 +164,44 @@ function wirePropertyCardButtons() {
   // Favorite toggles
   $$('.property-card__fav:not([data-wired])').forEach((btn) => {
     btn.setAttribute('data-wired', '1');
-    btn.addEventListener('click', () => {
-      const isSaved = btn.getAttribute('aria-pressed') === 'true';
-      btn.setAttribute('aria-pressed', String(!isSaved));
-      const svg = btn.querySelector('svg path');
-      if (svg) {
-        if (!isSaved) {
-          svg.setAttribute('fill', 'currentColor');
-          btn.style.color = 'var(--c-accent)';
-        } else {
-          svg.setAttribute('fill', 'none');
-          btn.style.color = '';
-        }
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!isAuthenticated()) {
+        window.location.href = 'pages/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
       }
-      btn.animate(
-        [{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }],
-        { duration: 300, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-      );
+
+      const propertyId = btn.getAttribute('data-id');
+      if (!propertyId) return;
+
+      try {
+        btn.disabled = true;
+        const res = await toggleFavorite(propertyId);
+        const isSaved = Boolean(res.isFavorite);
+        btn.setAttribute('aria-pressed', String(isSaved));
+
+        const svg = btn.querySelector('svg path');
+        if (svg) {
+          if (isSaved) {
+            svg.setAttribute('fill', 'currentColor');
+            btn.style.color = 'var(--c-accent)';
+          } else {
+            svg.setAttribute('fill', 'none');
+            btn.style.color = '';
+          }
+        }
+
+        btn.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }],
+          { duration: 300, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
+        );
+      } catch (err) {
+        console.error('Failed to toggle favorite:', err);
+      } finally {
+        btn.disabled = false;
+      }
     });
   });
 }
