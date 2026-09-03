@@ -1,41 +1,312 @@
-# Dwelling - Real Estate Landing Page
+# Dwelling — Full-Stack Real Estate Platform
 
-Dwelling is a fictional real estate platform concept created as a front-end practice project. It is **not a real estate agency, brokerage, marketplace, or active service**, and none of the listings, prices, agents, testimonials, brands, or statistics shown on the page should be treated as real.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg?logo=node.js)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-lightgrey.svg?logo=express)](https://expressjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.4-indigo.svg?logo=prisma)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E.svg?logo=supabase)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
-The page is based on a design found online and was recreated for learning and experimentation. It is not intended for commercial use or to represent an actual company.
+**Dwelling** is a modern, decoupled full-stack real estate marketplace platform connecting home seekers, property owners, and licensed real estate agents. The project combines a responsive, zero-build vanilla frontend with a type-safe Node.js / Express backend powered by Prisma ORM and hosted PostgreSQL on Supabase.
 
-## What is included
+---
 
-- A hero section with a property-search form, headline, image gallery, and animated stats
-- Trust metrics and an about section with a featured agent card
-- A responsive grid of fictional property listings
-- Feature tiles for verified listings, expert agents, tours, and smart contracts
-- A home-tour video presentation area with play-button feedback
-- Client testimonials and a continuously moving sponsor-style logo strip
-- A final call-to-action section and responsive mobile navigation drawer
+## 🏗️ System Architecture
 
-## Front-end details
+Dwelling employs a decoupled multi-page application (MPA) client communicating with a REST API backend:
 
-This project uses plain HTML, CSS, and JavaScript with no framework or build step. The design combines deep navy, warm orange, soft neutral surfaces, rounded cards, generous spacing, and the Plus Jakarta Sans typeface to create a polished property-platform feel.
-
-A few implementation details make the page feel more like a product experience than a static mockup:
-
-- CSS custom properties keep colors, spacing, typography, shadows, and motion consistent.
-- CSS Grid and flexible containers adapt the layout across desktop and mobile screens.
-- JavaScript powers the mobile drawer, sticky navigation state, scroll-based active links, reveal animations, animated counters, favorite-button feedback, and smooth anchor scrolling.
-- Semantic markup, descriptive image alt text, a skip link, visible focus states, ARIA attributes, lazy-loaded images, and reduced-motion handling provide a stronger accessibility foundation.
-
-## Running it locally
-
-No installation is required. Open `index.html` directly in a browser, or serve this folder with any simple local HTTP server.
-
-## Project structure
-
-```text
-index.html       Page structure and content
-css/main.css     Responsive styles and design tokens
-main.js          Interaction and animation behavior
-images/          Page imagery and icons
+```
+┌────────────────────────────────────────────────────────┐
+│               FRONTEND LAYER (FrontEnd/)               │
+│   • Semantic HTML5 Multi-Page Application (MPA)        │
+│   • Vanilla CSS with Custom Properties Design Tokens   │
+│   • Native ES6 JavaScript Modules (No Bundler Needed)  │
+│   • Centralized API Service in js/api.js               │
+└───────────────────────────┬────────────────────────────┘
+                            │ REST / JSON (Bearer JWT)
+┌───────────────────────────▼────────────────────────────┐
+│                API BACKEND (server/)                   │
+│   • Node.js (v20+) & Express 5.x                       │
+│   • TypeScript 5.9 with ES2020 Target                  │
+│   • Prisma ORM 6.4 (Data Modeling & Migrations)        │
+│   • Hardened HS256 JWT Auth & bcryptjs Hashing         │
+└───────────────────────────┬────────────────────────────┘
+                            │ Prisma Client
+┌───────────────────────────▼────────────────────────────┐
+│               DATABASE (Supabase Cloud)                │
+│   • Hosted PostgreSQL 15+ Instance                     │
+│   • Connection Pooler (Port 5432 / 6543)               │
+└────────────────────────────────────────────────────────┘
 ```
 
-This repository is a snapshot of front-end practice work, not a production real estate application.
+---
+
+## ✨ Key Implemented Features
+
+### 🔍 Property Catalog & Search
+- **Dynamic Filtering**: Filter listings by search keyword (`title`, `city`, `address`, `state`, `zip`), property type (`HOUSE`, `APT`, `CONDO`, `TOWNHOUSE`), price type (`RENT`, `SALE`), price range, bedrooms, bathrooms, and featured status.
+- **Server-Side Pagination & Sorting**: Paginated results with `page` and `limit`, sortable by price, date created, or featured priority.
+- **Single Property Details**: Rich detail view with multi-image gallery carousel, property specifications, agent profile card, and client reviews.
+
+### 🔐 Hardened Authentication & Security
+- **Secure Password Hashing**: Passwords salted and hashed with `bcryptjs`.
+- **JWT Verification**: Tokens signed and validated using explicit `HS256` algorithms with strict Bearer header parsing.
+- **Startup Secret Validation**: Fails gracefully on boot if `JWT_SECRET` is absent or set to an insecure default.
+- **Privilege Escalation Protection**: Public registration strictly permits `SEEKER` or `AGENT` roles (defaulting to `SEEKER`). Direct assignment of `ADMIN` via registration or profile updates is rejected with `403 Forbidden`.
+- **Admin Role Management**: Role elevations to `ADMIN` are restricted to the protected `PATCH /api/users/:id/role` endpoint.
+- **Dynamic CORS**: Whitelists origins dynamically based on `ALLOWED_ORIGINS` / `CLIENT_URL`.
+
+### 🏢 Real Estate Agent Workflows
+- **Agent Role Guard**: Dedicated `POST /api/properties` endpoint restricted to authenticated agents and administrators.
+- **Property Publishing**: Listing creation form capturing property specs, pricing, address details, and image galleries.
+- **Agent Profiles**: Linked `AgentProfile` records tracking license numbers, agency names, years of experience, ratings, and total sales.
+
+### 📊 Live Platform Metrics
+- **Real-Time Database Statistics**: Hero counters and platform statistics dynamically aggregated from PostgreSQL (total listings, active agents, covered cities, and average pricing).
+- **Newsletter Subscription**: Email capture pipeline with deduplication and upsert handling.
+
+---
+
+## 🗺️ Roadmap & Upcoming Features
+
+The database schema ([schema.prisma](file:///c:/Users/somet/Downloads/Coding/Dwelling/server/prisma/schema.prisma)) and API layer already define foundational models and route stubs for the following planned features:
+
+- [ ] **Tour Booking System (`TourBooking`)**: Schedule in-person and virtual property walkthroughs with status tracking (`REQUESTED`, `CONFIRMED`, `COMPLETED`, `CANCELLED`).
+- [ ] **Saved Favorites (`Favorite`)**: Authenticated user property bookmarking and personal saved listings collection.
+- [ ] **Review & Rating Authoring (`Review`)**: Form submission for 1–5 star ratings and verified buyer/renter feedback.
+- [ ] **Cloud Storage Asset Pipeline**: Supabase Storage / S3 pre-signed upload URLs for direct client image uploads.
+- [ ] **Interactive Maps**: Mapbox / Leaflet integration utilizing property latitude and longitude coordinates.
+- [ ] **Real-Time Chat**: Direct messaging between home seekers and listing agents.
+
+---
+
+## 📡 API Reference
+
+Base API URL: `http://localhost:5001/api`
+
+### Authentication & Users
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Register new seeker or agent account |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive JWT token |
+| `GET` | `/api/auth/me` | Authenticated | Validate session and retrieve profile |
+| `GET` | `/api/users/me` | Authenticated | Retrieve authenticated user profile |
+| `PUT` | `/api/users/me` | Authenticated | Update personal profile details |
+| `PATCH`| `/api/users/:id/role` | Admin Only | Assign or modify a user's account role |
+
+### Properties & Stats
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/properties` | Public | Search properties with filters & pagination |
+| `GET` | `/api/properties/:id` | Public | Fetch detailed property by ID with relations |
+| `GET` | `/api/properties/featured` | Public | Fetch top featured listings |
+| `GET` | `/api/properties/stats` | Public | Aggregate platform property statistics |
+| `GET` | `/api/stats` | Public | Canonical alias for `/api/properties/stats` |
+| `POST` | `/api/properties` | Agent / Admin | Create a new property listing |
+| `POST` | `/api/properties/:id/tours` | Authenticated | *Stub:* Schedule tour booking |
+| `POST` | `/api/properties/:id/favorite` | Authenticated | *Stub:* Toggle saved property favorite |
+| `POST` | `/api/properties/:id/reviews` | Authenticated | *Stub:* Submit property rating & review |
+| `POST` | `/api/newsletter` | Public | Subscribe email to newsletter updates |
+| `GET` | `/api/health` | Public | Server healthcheck probe |
+
+---
+
+## 🛠️ Local Development Setup
+
+### Prerequisites
+- **Node.js**: `v20.x` or higher
+- **npm** or **pnpm**
+- **Python 3** (for serving the static frontend) or any local HTTP server
+- **PostgreSQL**: A local instance or a hosted [Supabase](https://supabase.com/) project
+
+---
+
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/mohammadamour/Dwelling.git
+cd Dwelling
+```
+
+---
+
+### Step 2: Configure Environment Variables
+
+Navigate to the `server/` directory and copy the environment template:
+
+```bash
+cd server
+cp .env.example .env
+```
+
+Open `server/.env` and configure the following variables:
+
+```env
+# Server Port Configuration
+PORT=5001
+NODE_ENV=development
+
+# Database Connection (Supabase PostgreSQL)
+# Transaction-mode connection pooler:
+DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+
+# Direct connection pooler (used for schema migrations):
+DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+
+# Authentication Security (REQUIRED)
+# Generate a secure 64-character secret: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=replace_with_a_secure_random_64_character_secret_key
+
+# Allowed CORS Origins (comma-separated whitelist)
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:5500,http://localhost:5500,http://localhost:5001
+```
+
+---
+
+### Step 3: Install Backend Dependencies
+From the `server/` directory:
+```bash
+npm install
+```
+
+---
+
+### Step 4: Database Setup & Seeding
+
+Synchronize your Prisma schema with your PostgreSQL database:
+
+```bash
+# Push schema directly to database
+npx prisma db push
+
+# (Alternatively) Run database migrations
+npx prisma migrate dev
+```
+
+Seed initial test data (generates test users, agents, 18 properties with images, reviews, and subscribers):
+
+```bash
+npm run db:seed
+```
+
+#### Pre-Configured Test Credentials (after seeding):
+- **Home Seeker:** `testuser1@example.com` / `password123`
+- **Home Seeker:** `testuser2@example.com` / `password123`
+- **Listing Agent:** `testagent@example.com` / `password123`
+
+---
+
+### Step 5: Start the Backend API Server
+
+```bash
+npm run dev
+```
+
+The API server will boot on `http://localhost:5001`:
+```text
+✅ Connected to Supabase PostgreSQL via Prisma
+🚀 Dwelling API running on http://localhost:5001
+   Health check: http://localhost:5001/api/health
+   Properties:   http://localhost:5001/api/properties
+   Stats:        http://localhost:5001/api/stats
+```
+
+---
+
+### Step 6: Serve the Frontend Client
+
+Open a **second terminal window** in the project root. Because modern browsers restrict native ES6 JavaScript modules over the `file://` protocol, serve the `FrontEnd/` directory over HTTP:
+
+**Using Python:**
+```bash
+python -m http.server 5500 --directory FrontEnd
+```
+
+**Using npx (Node):**
+```bash
+npx serve FrontEnd -l 5500
+```
+
+*(Or use the **VS Code / Cursor Live Server** extension on `FrontEnd/index.html`).*
+
+Open your browser and navigate to:
+👉 **[http://localhost:5500](http://localhost:5500)**
+
+---
+
+## 📁 Repository Structure
+
+```text
+Dwelling/
+├── AGENTS.md                  # System architecture, guidelines, and engineering contracts
+├── README.md                  # Primary developer documentation & setup guide
+├── FrontEnd/                  # Frontend client application (MPA)
+│   ├── index.html             # Landing page with hero search & featured listings
+│   ├── css/                   # Vanilla CSS & custom property design tokens
+│   │   ├── main.css           # Global typography, layout tokens & reset
+│   │   ├── shared.css         # Reusable navigation, buttons, cards & modals
+│   │   ├── auth.css           # Login & registration form styles
+│   │   ├── properties.css     # Catalog search & filter grid layout
+│   │   └── property-details.css # Gallery carousel & specs styling
+│   ├── js/                    # Native ES6 JavaScript modules
+│   │   ├── api.js             # Centralized API fetch wrapper & JWT token manager
+│   │   ├── shared.js          # Dynamic header auth state, mobile drawer & formatters
+│   │   ├── landing.js         # Animated counters, newsletter & featured listings
+│   │   ├── properties.js      # Filter state, debounce search & pagination
+│   │   ├── property-details.js# Image gallery thumbs, reviews & details loader
+│   │   ├── login.js           # Authentication handler
+│   │   ├── register.js        # Account registration with role selection
+│   │   ├── profile.js         # User profile viewer & editor
+│   │   └── add-property.js    # Agent listing submission handler
+│   └── pages/                 # Multi-page application sub-pages
+│       ├── login.html
+│       ├── register.html
+│       ├── properties.html
+│       ├── property-details.html
+│       ├── profile.html
+│       └── add-property.html
+└── server/                    # Node.js & Express REST API
+    ├── .env                   # Active environment variables (git-ignored)
+    ├── .env.example           # Environment template documentation
+    ├── package.json           # Server dependencies & scripts
+    ├── tsconfig.json          # TypeScript compiler configuration
+    ├── prisma/
+    │   ├── schema.prisma      # Database schema models & enums
+    │   └── seed.ts            # Database seeder with mock properties & users
+    └── src/
+        ├── index.ts           # Server entry point, CORS & middleware
+        ├── config/
+        │   └── env.ts         # Centralized environment & JWT secret validator
+        ├── middleware/
+        │   └── auth.ts        # JWT authentication & role authorization guards
+        ├── routes/
+        │   ├── auth.ts        # Authentication routes (/api/auth)
+        │   ├── userRoutes.ts  # User profile & admin role routes (/api/users)
+        │   ├── propertyRoutes.ts # Listings & stats routes (/api/properties)
+        │   └── stats.ts       # Canonical stats alias route (/api/stats)
+        └── controllers/
+            ├── propertyController.ts # Properties, filters & stats business logic
+            └── userController.ts     # User profile & role modification logic
+```
+
+---
+
+## 🔒 Security Best Practices Implemented
+
+- **No Hardcoded Secrets**: Secrets are read exclusively from environment variables with boot-time schema validation.
+- **Timing-Safe Password Verification**: Implemented using `bcryptjs` with salt rounds.
+- **Algorithm Confusion Defense**: JWT decoding explicitly specifies `{ algorithms: ['HS256'] }`.
+- **Privilege Separation**: Users cannot self-assign administrative roles during registration or profile updates.
+- **Sanitized Errors**: Internal database engine errors and stack traces are suppressed in production environments.
+
+---
+
+## 📌 Project Disclaimer & Attribution
+
+- **Learning & Portfolio Project**: Dwelling was built as an educational and portfolio project to explore decoupled full-stack architecture, database modeling with Prisma, authentication hardening, and API engineering. While the application is functional and being actively polished for production deployment, it is not a commercial real estate agency or active brokerage service.
+- **Design Attribution**: The frontend interface concept was recreated for practice and experimentation based on an online design. All listings, property photography, agent personas, reviews, and statistics shown throughout the application are demonstration mock data.
+
+---
+
+## 📄 License
+
+This project is licensed under the [ISC License](LICENSE).
