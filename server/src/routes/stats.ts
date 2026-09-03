@@ -1,35 +1,13 @@
-import express = require('express');
+import { Router } from 'express';
+import { getPropertyStats } from '../controllers/propertyController';
 
-const router = express.Router();
-type Request = express.Request;
-type Response = express.Response;
+const router = Router();
 
 /**
  * GET /api/stats
- * Alias for /api/properties/stats
+ * Canonical alias for /api/properties/stats preserving backward compatibility.
+ * Reuses the single getPropertyStats controller to ensure zero duplicate query logic.
  */
-router.get('/stats', async (req: Request, res: Response) => {
-  const prisma = (req as any).prisma;
-  try {
-    const [totalListings, totalAgents, citiesData, avgPrice] = await Promise.all([
-      prisma.property.count(),
-      prisma.user.count({ where: { role: 'AGENT' } }),
-      prisma.property.findMany({ select: { city: true }, distinct: ['city'] }),
-      prisma.property.aggregate({ _avg: { price: true } }),
-    ]);
+router.get('/stats', getPropertyStats);
 
-    res.json({
-      totalListings,
-      totalAgents,
-      totalCities: citiesData.length,
-      averagePrice: Math.round(avgPrice._avg.price || 0),
-      listingsAddedWeekly: Math.max(1, Math.round(totalListings * 0.05)),
-      clientSatisfaction: 97.2,
-    });
-  } catch (error) {
-    console.error('GET /api/stats error:', error);
-    res.status(500).json({ error: 'Failed to fetch stats' });
-  }
-});
-
-export = router;
+module.exports = router;

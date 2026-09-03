@@ -408,3 +408,75 @@ export const createProperty = async (req: any, res: Response) => {
     res.status(500).json({ error: 'Failed to create property listing' });
   }
 };
+
+/**
+ * TODO: [Tour Booking System] - Planned implementation for scheduling in-person or virtual property tours
+ * POST /api/properties/:id/tours
+ */
+export const bookPropertyTour = async (req: any, res: Response) => {
+  try {
+    const propertyId = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required to schedule a tour' });
+    }
+
+    res.status(501).json({
+      message: 'Tour booking system is planned and currently under active development.',
+      propertyId,
+      userId,
+    });
+  } catch (error) {
+    console.error('Tour booking stub error:', error);
+    res.status(500).json({ error: 'Failed to process tour booking' });
+  }
+};
+
+/**
+ * TODO: [Favorites System] - Planned implementation for toggling saved properties
+ * POST /api/properties/:id/favorite
+ */
+export const togglePropertyFavorite = async (req: any, res: Response) => {
+  try {
+    const propertyId = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required to save favorites' });
+    }
+
+    res.status(501).json({
+      message: 'Favorites persistence system is planned and currently under active development.',
+      propertyId,
+      userId,
+    });
+  } catch (error) {
+    console.error('Favorite toggle stub error:', error);
+    res.status(500).json({ error: 'Failed to process favorite toggle' });
+  }
+};
+
+/**
+ * TODO: [Reviews System] - Planned implementation for submitting property feedback and star ratings
+ * POST /api/properties/:id/reviews
+ */
+export const createPropertyReview = async (req: any, res: Response) => {
+  try {
+    const propertyId = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required to submit a review' });
+    }
+
+    res.status(501).json({
+      message: 'Review authoring system is planned and currently under active development.',
+      propertyId,
+      userId,
+    });
+  } catch (error) {
+    console.error('Create review stub error:', error);
+    res.status(500).json({ error: 'Failed to submit review' });
+  }
+};

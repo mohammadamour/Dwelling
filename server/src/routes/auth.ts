@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient, Role } from '@prisma/client';
 import { AuthRequest, authenticate } from '../middleware/auth';
 import { JWT_SECRET } from '../config/env';
+import { getUserProfile } from '../controllers/userController';
 
 const router = Router();
 
@@ -184,56 +185,8 @@ router.post('/login', async (req: Request, res: Response) => {
 
 /**
  * GET /api/auth/me
- * Get current authenticated user profile
+ * Session verification endpoint (unified with /api/users/me using standardized envelope pattern)
  */
-router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ error: 'Authentication required.' });
-    }
-
-    const prisma = (req as any).prisma as PrismaClient;
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phone: true,
-        role: true,
-        avatarUrl: true,
-        bio: true,
-        createdAt: true,
-        updatedAt: true,
-        agentProfile: {
-          select: {
-            licenseNumber: true,
-            yearsExperience: true,
-            rating: true,
-            agencyName: true,
-            totalSales: true,
-            specializations: true
-          }
-        },
-        _count: {
-          select: {
-            favorites: true,
-            reviews: true
-          }
-        }
-      }
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User profile not found.' });
-    }
-
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to retrieve user profile.' });
-  }
-});
+router.get('/me', authenticate, getUserProfile);
 
 module.exports = router;

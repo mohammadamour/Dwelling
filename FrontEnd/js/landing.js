@@ -3,7 +3,7 @@
  * Dynamic property loading and interactions
  */
 
-import { fetchFeaturedProperties, fetchPropertyStats } from './api.js';
+import { fetchFeaturedProperties, fetchPropertyStats, apiFetch } from './api.js';
 import { $, $$, fmtCurrency } from './shared.js';
 
 // Property card rendering
@@ -355,20 +355,25 @@ function initNewsletter() {
     if (!email) return;
     
     try {
-      await fetch('http://localhost:5001/api/newsletter', {
+      await apiFetch('/newsletter', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, sourcePage: 'home' }),
       });
-    } catch (_) {
-      /* swallow */
-    }
-    if (input) {
-      input.value = '';
-      input.placeholder = '🎉 Thanks! Check your inbox.';
-      setTimeout(() => {
-        input.placeholder = 'you@example.com';
-      }, 3500);
+      if (input) {
+        input.value = '';
+        input.placeholder = '🎉 Thanks! Check your inbox.';
+        setTimeout(() => {
+          input.placeholder = 'you@example.com';
+        }, 3500);
+      }
+    } catch (err) {
+      console.error('Newsletter subscription failed:', err);
+      if (input) {
+        input.placeholder = '⚠️ Unable to subscribe. Try again.';
+        setTimeout(() => {
+          input.placeholder = 'you@example.com';
+        }, 3500);
+      }
     }
   });
 }

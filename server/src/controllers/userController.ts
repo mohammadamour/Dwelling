@@ -51,7 +51,10 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json({ user });
+    res.status(200).json({
+      data: user,
+      user,
+    });
   } catch (error) {
     console.error('Get user profile error:', error);
     res.status(500).json({ error: 'Failed to get user profile' });
@@ -156,7 +159,10 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    res.status(200).json({ user: updatedUser });
+    res.status(200).json({
+      data: updatedUser,
+      user: updatedUser,
+    });
   } catch (error) {
     console.error('Update user profile error:', error);
     res.status(500).json({ error: 'Failed to update user profile' });
