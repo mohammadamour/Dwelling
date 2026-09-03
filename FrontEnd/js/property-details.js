@@ -185,6 +185,7 @@ async function loadPropertyDetails() {
     initFavoriteButton(property);
     initTourBooking(property);
     initReviewForm(property);
+    initAgentInquiry(property);
 
   } catch (error) {
     console.error('Failed to load property details:', error);
@@ -550,6 +551,145 @@ function initReviewForm(property) {
       }
     }
   });
+}
+
+// Interactive client-side inquiry state for Agent Information Component
+function initAgentInquiry(property) {
+  const openBtn = $('#openInquiryBtn');
+  const cancelBtn = $('#cancelInquiryBtn');
+  const sendBtn = $('#sendInquiryBtn');
+  const actionsContainer = $('#agentCardActions');
+  const inquiryForm = $('#agentInquiryForm');
+  const inquiryText = $('#agentInquiryText');
+  const charCount = $('#inquiryCharCount');
+  const successBox = $('#agentInquirySuccess');
+  const successTitle = $('#inquirySuccessTitle');
+  const successDesc = $('#inquirySuccessDesc');
+  const dismissBtn = $('#dismissSuccessBtn');
+
+  if (!openBtn || !inquiryForm || !actionsContainer) return;
+
+  const agentName = property?.agent?.name || 'Agent';
+  const agentFirstName = agentName.split(' ')[0] || 'the agent';
+
+  // Customize dynamic placeholder
+  if (inquiryText) {
+    inquiryText.placeholder = `Ask ${agentFirstName} about availability, tours, or lease terms...`;
+  }
+
+  let resetTimer = null;
+
+  function showDefaultState() {
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+      resetTimer = null;
+    }
+    inquiryForm.classList.remove('is-active');
+    inquiryForm.setAttribute('aria-hidden', 'true');
+    successBox?.classList.remove('is-visible');
+    actionsContainer.style.display = 'flex';
+
+    if (inquiryText) {
+      inquiryText.value = '';
+      inquiryText.disabled = false;
+      inquiryText.classList.remove('is-invalid');
+    }
+    if (charCount) charCount.textContent = '0/300';
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      const label = sendBtn.querySelector('.send-label');
+      if (label) label.textContent = 'Send';
+      const icon = sendBtn.querySelector('.send-icon');
+      if (icon) icon.style.display = 'inline-block';
+      const spinner = sendBtn.querySelector('.spinner-inline');
+      if (spinner) spinner.remove();
+    }
+    if (cancelBtn) cancelBtn.disabled = false;
+  }
+
+  function showInquiryState() {
+    if (resetTimer) {
+      clearTimeout(resetTimer);
+      resetTimer = null;
+    }
+    successBox?.classList.remove('is-visible');
+    actionsContainer.style.display = 'none';
+    inquiryForm.classList.add('is-active');
+    inquiryForm.setAttribute('aria-hidden', 'false');
+    inquiryText?.focus();
+  }
+
+  function showSuccessState() {
+    inquiryForm.classList.remove('is-active');
+    inquiryForm.setAttribute('aria-hidden', 'true');
+    actionsContainer.style.display = 'none';
+
+    if (successTitle) successTitle.textContent = `Message sent to ${agentName}!`;
+    if (successDesc) successDesc.textContent = `${agentFirstName} will get back to you shortly at your contact details.`;
+    if (successBox) successBox.classList.add('is-visible');
+
+    // Auto-reset back to default after 5 seconds
+    resetTimer = setTimeout(() => {
+      showDefaultState();
+    }, 5000);
+  }
+
+  openBtn.onclick = () => {
+    showInquiryState();
+  };
+
+  if (cancelBtn) {
+    cancelBtn.onclick = () => {
+      showDefaultState();
+    };
+  }
+
+  if (dismissBtn) {
+    dismissBtn.onclick = () => {
+      showDefaultState();
+    };
+  }
+
+  if (inquiryText) {
+    inquiryText.oninput = () => {
+      inquiryText.classList.remove('is-invalid');
+      const len = inquiryText.value.length;
+      if (charCount) charCount.textContent = `${len}/300`;
+    };
+  }
+
+  if (sendBtn) {
+    sendBtn.onclick = () => {
+      const message = inquiryText?.value?.trim();
+      if (!message) {
+        inquiryText?.classList.add('is-invalid');
+        inquiryText?.focus();
+        return;
+      }
+
+      // Transition to sending loading state
+      sendBtn.disabled = true;
+      if (cancelBtn) cancelBtn.disabled = true;
+      if (inquiryText) inquiryText.disabled = true;
+
+      const label = sendBtn.querySelector('.send-label');
+      if (label) label.textContent = 'Sending...';
+      const icon = sendBtn.querySelector('.send-icon');
+      if (icon) icon.style.display = 'none';
+
+      let spinner = sendBtn.querySelector('.spinner-inline');
+      if (!spinner) {
+        spinner = document.createElement('span');
+        spinner.className = 'spinner-inline';
+        sendBtn.prepend(spinner);
+      }
+
+      // Mock network latency (800ms)
+      setTimeout(() => {
+        showSuccessState();
+      }, 800);
+    };
+  }
 }
 
 // Initialize property details page
