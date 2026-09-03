@@ -55,7 +55,7 @@
 
 /* ---------- PROPERTY GALLERY ---------- */
 .property-gallery {
-  margin-bottom: var(--s-8);
+  margin-bottom: 0;
 }
 
 .property-gallery__main {
@@ -140,11 +140,14 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--s-8);
+  margin-top: var(--s-8);
   margin-bottom: var(--s-12);
+  align-items: start;
 }
 @media (min-width: 1024px) {
   .property-info {
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    gap: var(--s-8);
   }
 }
 
@@ -152,12 +155,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-8);
+  min-width: 0;
 }
 
 .property-info__sidebar {
   display: flex;
   flex-direction: column;
   gap: var(--s-6);
+  min-width: 0;
 }
 
 /* ---------- PRICE CARD ---------- */
@@ -290,11 +295,21 @@
 }
 
 /* ---------- AGENT CARD ---------- */
+.property-info__sidebar .agent-card,
 .agent-card {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-xl);
   padding: var(--s-6);
+  box-shadow: var(--sh-md);
   text-align: center;
 }
 
@@ -304,6 +319,7 @@
   border-radius: 50%;
   margin: 0 auto var(--s-3);
   object-fit: cover;
+  display: block;
 }
 
 .agent-card__name {
@@ -316,12 +332,19 @@
 .agent-card__role {
   font-size: var(--fs-sm);
   color: var(--c-muted);
-  margin-bottom: var(--s-3);
+  margin-bottom: var(--s-1);
+}
+
+.agent-card__agency {
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  margin-bottom: var(--s-2);
 }
 
 .agent-card__rating {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   color: hsl(44 93% 58%);
   font-weight: var(--fw-semibold);
@@ -331,6 +354,16 @@
 .agent-card__rating span {
   color: var(--c-text);
   margin-left: var(--s-1);
+}
+
+.agent-card__contact {
+  margin-top: var(--s-2);
+  margin-bottom: var(--s-4);
+  font-size: var(--fs-xs);
+  color: var(--c-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .agent-card__actions {

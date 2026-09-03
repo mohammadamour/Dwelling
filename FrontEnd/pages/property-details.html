@@ -14,9 +14,9 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="../css/shared.css" />
-    <link rel="stylesheet" href="../css/landing.css" />
-    <link rel="stylesheet" href="../css/property-details.css" />
+    <link rel="stylesheet" href="../css/shared.css?v=3" />
+    <link rel="stylesheet" href="../css/landing.css?v=3" />
+    <link rel="stylesheet" href="../css/property-details.css?v=3" />
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
@@ -159,31 +159,31 @@
           </div>
         </section>
 
-        <!-- Property Gallery -->
-        <section class="container property-gallery">
-          <div class="property-gallery__main">
-            <img id="mainImage" src="" alt="Property main image" />
-            <div class="property-gallery__main-nav" id="galleryNav" hidden>
-              <button type="button" class="gallery-nav-btn" id="prevImage" aria-label="Previous image">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <button type="button" class="gallery-nav-btn" id="nextImage" aria-label="Next image">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="property-gallery__thumbs" id="galleryThumbs">
-            <!-- Thumbnails will be dynamically loaded -->
-          </div>
-        </section>
-
-        <!-- Property Info -->
+        <!-- Property Main Content Grid -->
         <section class="container property-info">
           <div class="property-info__main">
+            <!-- Property Gallery -->
+            <div class="property-gallery">
+              <div class="property-gallery__main">
+                <img id="mainImage" src="" alt="Property main image" />
+                <div class="property-gallery__main-nav" id="galleryNav" hidden>
+                  <button type="button" class="gallery-nav-btn" id="prevImage" aria-label="Previous image">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="gallery-nav-btn" id="nextImage" aria-label="Next image">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="property-gallery__thumbs" id="galleryThumbs">
+                <!-- Thumbnails will be dynamically loaded -->
+              </div>
+            </div>
+
             <!-- Property Specifications -->
             <div class="property-specs">
               <h2 class="property-specs__title">Property Specifications</h2>
@@ -267,6 +267,34 @@
           </div>
 
           <div class="property-info__sidebar">
+            <!-- Agent Card (at the top of sidebar, aligning with primary hero image) -->
+            <div class="agent-card" id="agentCard" style="position: relative; right: auto; bottom: auto; transform: none; width: 100%;">
+              <img src="" alt="Agent avatar" class="agent-card__avatar" id="agentAvatar" />
+              <h3 class="agent-card__name" id="agentName">Loading...</h3>
+              <p class="agent-card__role" id="agentRole">Property Agent</p>
+              <p class="agent-card__agency" id="agentAgency" style="font-size: var(--text-sm); color: var(--c-muted); margin-top: 2px;"></p>
+              <div class="agent-card__rating" id="agentRating">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                <span id="agentRatingValue">0.0</span>
+              </div>
+              <div class="agent-card__contact" id="agentContact" style="margin-top: var(--s-3); font-size: var(--text-xs); color: var(--c-muted); display: flex; flex-direction: column; gap: 4px;">
+                <span id="agentPhone"></span>
+                <span id="agentEmail"></span>
+              </div>
+              <div class="agent-card__actions">
+                <button type="button" class="btn btn--primary btn--full">
+                  <span>Message Agent</span>
+                </button>
+                <button type="button" class="btn btn--outline btn--full">
+                  <span>View Profile</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Price Card -->
             <div class="price-card">
               <div class="price-card__price" id="priceValue">$0</div>
@@ -318,34 +346,6 @@
                   <span class="price-card__feature-value" id="featureCity">-</span>
                   <span class="price-card__feature-label">City</span>
                 </div>
-              </div>
-            </div>
-
-            <!-- Agent Card -->
-            <div class="agent-card" id="agentCard">
-              <img src="" alt="Agent avatar" class="agent-card__avatar" id="agentAvatar" />
-              <h3 class="agent-card__name" id="agentName">Loading...</h3>
-              <p class="agent-card__role" id="agentRole">Property Agent</p>
-              <p class="agent-card__agency" id="agentAgency" style="font-size: var(--text-sm); color: var(--c-muted); margin-top: 2px;"></p>
-              <div class="agent-card__rating" id="agentRating">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                <span id="agentRatingValue">0.0</span>
-              </div>
-              <div class="agent-card__contact" id="agentContact" style="margin-top: var(--s-3); font-size: var(--text-xs); color: var(--c-muted); display: flex; flex-direction: column; gap: 4px;">
-                <span id="agentPhone"></span>
-                <span id="agentEmail"></span>
-              </div>
-              <div class="agent-card__actions">
-                <button type="button" class="btn btn--primary btn--full">
-                  <span>Message Agent</span>
-                </button>
-                <button type="button" class="btn btn--outline btn--full">
-                  <span>View Profile</span>
-                </button>
               </div>
             </div>
           </div>
