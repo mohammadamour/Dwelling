@@ -54,7 +54,15 @@ function initLoginForm() {
 
       // Redirect to home or properties page after short delay
       setTimeout(() => {
-        const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '../index.html';
+        const rawRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
+        // Security: Only allow safe relative paths to prevent open redirect attacks.
+        // Reject absolute URLs, protocol-relative URLs (//evil.com), and scheme-prefixed strings.
+        const isSafeRedirect = rawRedirect &&
+          !rawRedirect.startsWith('http://') &&
+          !rawRedirect.startsWith('https://') &&
+          !rawRedirect.startsWith('//') &&
+          !rawRedirect.includes('://');
+        const redirectUrl = isSafeRedirect ? rawRedirect : '../index.html';
         window.location.href = redirectUrl;
       }, 1000);
 

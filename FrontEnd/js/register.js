@@ -75,7 +75,14 @@ function initRegisterForm() {
 
       // Redirect to home or properties page after short delay
       setTimeout(() => {
-        const redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '../index.html';
+        const rawRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
+        // Security: Only allow safe relative paths to prevent open redirect attacks.
+        const isSafeRedirect = rawRedirect &&
+          !rawRedirect.startsWith('http://') &&
+          !rawRedirect.startsWith('https://') &&
+          !rawRedirect.startsWith('//') &&
+          !rawRedirect.includes('://');
+        const redirectUrl = isSafeRedirect ? rawRedirect : '../index.html';
         window.location.href = redirectUrl;
       }, 1500);
 

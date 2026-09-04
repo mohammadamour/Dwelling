@@ -66,7 +66,7 @@ model Property {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   favorites    Favorite[]
-  agent        User            @relation("AgentProperties", fields: [agentId], references: [id])
+  agent        User            @relation("AgentProperties", fields: [agentId], references: [id], onDelete: Cascade)
   images       PropertyImage[]
   reviews      Review[]
   tourBookings TourBooking[]
@@ -103,6 +103,8 @@ model Review {
   createdAt  DateTime @default(now())
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   reviewer   User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, propertyId])
 }
 
 model TourBooking {
