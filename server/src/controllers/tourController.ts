@@ -116,8 +116,13 @@ export const createTourBooking = async (req: AuthRequest, res: Response) => {
       data: booking,
       message: 'Your property tour has been scheduled successfully. The agent will review and confirm your visit.',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create tour booking error:', error);
+    if (error?.code === 'P2003') {
+      return res.status(401).json({
+        error: 'User account or property no longer exists. Please log in again.',
+      });
+    }
     res.status(500).json({ error: 'Failed to schedule tour booking' });
   }
 };

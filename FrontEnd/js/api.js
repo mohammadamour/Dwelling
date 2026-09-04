@@ -2,11 +2,21 @@
  * Dwelling API Service Layer
  * Modular API client for frontend-backend communication
  */
-// Base Configuration
-const DEFAULT_API_BASE_URL = 'http://localhost:5001/api';
-const API_BASE_URL =
-  (typeof window !== 'undefined' && (window.__DWELLING_API_BASE_URL__ || window.DWELLING_API_BASE_URL)) ||
-  DEFAULT_API_BASE_URL;
+import {
+  resolveApiBaseUrl,
+  buildApiUrl,
+  isLocalhost,
+  DWELLING_CONFIG,
+} from './config.js';
+
+// Base Configuration & Environment Resolution
+export function getApiBaseUrl() {
+  return resolveApiBaseUrl();
+}
+
+export const DEFAULT_API_BASE_URL = DWELLING_CONFIG.developmentApiUrl;
+export const API_BASE_URL = resolveApiBaseUrl();
+export { buildApiUrl, isLocalhost, DWELLING_CONFIG };
 
 // Token Management
 const TOKEN_KEY = 'dwelling_auth_token';
@@ -147,7 +157,7 @@ export async function apiFetch(endpoint, options = {}) {
     throw new Error(message);
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = buildApiUrl(endpoint);
   const token = getAuthToken();
 
   const headers = {
@@ -518,6 +528,12 @@ export async function fetchAgentById(agentId) {
 
 // Export all functions as a default object for convenience
 const api = {
+  // Base configuration & URL resolution
+  getApiBaseUrl,
+  buildApiUrl,
+  API_BASE_URL,
+  DWELLING_CONFIG,
+
   // Token management
   getAuthToken,
   setAuthToken,

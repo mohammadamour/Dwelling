@@ -97,6 +97,11 @@ app.use((_req, res) => {
 // Error handler (Hardened to avoid leaking raw database error messages in production)
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Server error:', err);
+  if (err?.code === 'P2003') {
+    return res.status(401).json({
+      error: 'Referenced user account or record no longer exists. Please log in again.'
+    });
+  }
   const isDev = NODE_ENV === 'development';
   res.status(500).json({
     error: 'Internal server error',

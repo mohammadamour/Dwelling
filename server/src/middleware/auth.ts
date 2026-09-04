@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
 import { JWT_SECRET } from '../config/env';
 
 export interface AuthUser {
@@ -19,7 +20,7 @@ const VALID_ROLES: AuthUser['role'][] = ['SEEKER', 'AGENT', 'ADMIN'];
  * Verifies Bearer JWT tokens on protected routes using the validated environment secret.
  * Rejects missing, malformed, expired, or tampered tokens.
  */
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -62,11 +63,32 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       });
     }
 
-    req.user = {
-      id: decoded.id,
-      email: typeof decoded.email === 'string' ? decoded.email : '',
-      role: decoded.role as AuthUser['role'],
-    };
+    // Verify user exists in database (guards against stale JWTs after database reseeds or account deletions)
+    const prisma = (req as any).prisma as PrismaClient;
+    if (prisma && typeof prisma.user?.findUnique === 'function') {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, email: true, role: true },
+      });
+
+      if (!dbUser) {
+        return res.status(401).json({
+          error: 'Authenticated user account no longer exists. Please log in again.'
+        });
+      }
+
+      req.user = {
+        id: dbUser.id,
+        email: dbUser.email,
+        role: dbUser.role as AuthUser['role'],
+      };
+    } else {
+      req.user = {
+        id: decoded.id,
+        email: typeof decoded.email === 'string' ? decoded.email : '',
+        role: decoded.role as AuthUser['role'],
+      };
+    }
 
     next();
   } catch (error) {
@@ -115,7 +137,7 @@ export const requireRole = (roles: Array<'SEEKER' | 'AGENT' | 'ADMIN'>) => {
  * Optional authentication middleware.
  * Attaches user to request if a valid token is present, but permits unauthenticated access.
  */
-export const optionalAuth = (req: AuthRequest, _res: Response, next: NextFunction) => {
+export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -124,11 +146,26 @@ export const optionalAuth = (req: AuthRequest, _res: Response, next: NextFunctio
       if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
         const decoded = jwt.verify(parts[1], JWT_SECRET, { algorithms: ['HS256'] }) as Record<string, any>;
         if (decoded && decoded.id && decoded.role && VALID_ROLES.includes(decoded.role as any)) {
-          req.user = {
-            id: decoded.id,
-            email: typeof decoded.email === 'string' ? decoded.email : '',
-            role: decoded.role as AuthUser['role'],
-          };
+          const prisma = (req as any).prisma as PrismaClient;
+          if (prisma && typeof prisma.user?.findUnique === 'function') {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: decoded.id },
+              select: { id: true, email: true, role: true },
+            });
+            if (dbUser) {
+              req.user = {
+                id: dbUser.id,
+                email: dbUser.email,
+                role: dbUser.role as AuthUser['role'],
+              };
+            }
+          } else {
+            req.user = {
+              id: decoded.id,
+              email: typeof decoded.email === 'string' ? decoded.email : '',
+              role: decoded.role as AuthUser['role'],
+            };
+          }
         }
       }
     }

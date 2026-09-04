@@ -127,6 +127,7 @@ The database schema (`server/prisma/schema.prisma`) defines the following active
 - **Client Code**:
   - Keep styling consistent with CSS custom properties in `FrontEnd/css/shared.css` and `main.css`.
   - Use `apiFetch` in `FrontEnd/js/api.js` for all backend communication; do not write raw `fetch` calls with hardcoded URLs.
+  - Environment configuration is managed in `FrontEnd/js/config.js` via `resolveApiBaseUrl()` (supporting `window.__DWELLING_API_BASE_URL__`, `<meta name="dwelling-api-url">`, `localStorage`, `DWELLING_CONFIG.productionApiUrl`, and auto-detecting localhost vs. production relative `/api`).
   - Check authentication state via `isAuthenticated()` and parse user claims using `getAuthUser()`.
 - **Server Code**:
   - Keep controllers in `server/src/controllers/` and routes in `server/src/routes/`.

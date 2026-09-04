@@ -76,8 +76,13 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
         favoritesCount: totalCount,
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Toggle favorite error:', error);
+    if (error?.code === 'P2003') {
+      return res.status(401).json({
+        error: 'User account or property no longer exists. Please log in again.',
+      });
+    }
     res.status(500).json({ error: 'Failed to update favorite status' });
   }
 };
@@ -132,8 +137,13 @@ export const addFavorite = async (req: AuthRequest, res: Response) => {
       favoritesCount: totalCount,
       message: 'Property added to favorites',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Add favorite error:', error);
+    if (error?.code === 'P2003') {
+      return res.status(401).json({
+        error: 'User account or property no longer exists. Please log in again.',
+      });
+    }
     res.status(500).json({ error: 'Failed to add favorite' });
   }
 };

@@ -67,8 +67,13 @@ export const createPropertyReview = async (req: AuthRequest, res: Response) => {
       data: review,
       message: 'Thank you! Your review has been published.',
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create review error:', error);
+    if (error?.code === 'P2003') {
+      return res.status(401).json({
+        error: 'User account or property no longer exists. Please log in again.',
+      });
+    }
     res.status(500).json({ error: 'Failed to submit review' });
   }
 };
