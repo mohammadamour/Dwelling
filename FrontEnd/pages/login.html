@@ -15,7 +15,98 @@
     />
 
     <link rel="stylesheet" href="../css/shared.css" />
-    <link rel="stylesheet" href="../css/auth.css" />
+    <link rel="stylesheet" href="../css/auth.css?v=demo1" />
+    <style>
+      /* Demo Credentials Quick Access */
+      .auth-demo {
+        background: hsl(221 83% 97%);
+        border: 1.5px dashed hsl(221 83% 65%);
+        border-radius: 1rem;
+        padding: 1rem 1.15rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .auth-demo__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .auth-demo__title {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: hsl(221 83% 53%);
+      }
+      .auth-demo__hint {
+        font-size: 0.7rem;
+        color: hsl(215 16% 47%);
+        font-weight: 500;
+      }
+      .auth-demo__subtitle {
+        font-size: 0.8125rem;
+        color: hsl(215 16% 40%);
+        line-height: 1.4;
+        margin: 0;
+      }
+      .auth-demo__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.625rem;
+        margin-top: 0.25rem;
+      }
+      .auth-demo__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.6rem 0.75rem;
+        background: #ffffff;
+        border: 1px solid hsl(214 32% 91%);
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: hsl(222 47% 11%);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        font-family: inherit;
+      }
+      .auth-demo__btn:hover {
+        border-color: hsl(221 83% 53%);
+        background: hsl(221 83% 98%);
+        color: hsl(221 83% 53%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px -1px rgba(37, 99, 235, 0.15);
+      }
+      .auth-demo__btn:active {
+        transform: translateY(0);
+      }
+      .auth-demo__badge {
+        display: inline-block;
+        padding: 0.15rem 0.45rem;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        line-height: 1;
+      }
+      .auth-demo__badge--agent {
+        background: hsl(221 83% 90%);
+        color: hsl(221 83% 35%);
+      }
+      .auth-demo__badge--seeker {
+        background: hsl(142 71% 90%);
+        color: hsl(142 71% 28%);
+      }
+    </style>
   </head>
   <body>
     <div class="auth-page">
@@ -37,6 +128,30 @@
             </div>
             <h1 class="auth-header__title">Welcome Back</h1>
             <p class="auth-header__subtitle">Sign in to your account to continue</p>
+          </div>
+
+          <!-- Demo Credentials Quick Fill for Recruiters & Testing -->
+          <div class="auth-demo" id="authDemoCard">
+            <div class="auth-demo__header">
+              <span class="auth-demo__title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Demo Quick Access
+              </span>
+              <span class="auth-demo__hint">1-click test fill</span>
+            </div>
+            <p class="auth-demo__subtitle">Instant login credentials to test all platform features without creating an account:</p>
+            <div class="auth-demo__actions">
+              <button type="button" class="auth-demo__btn" id="fillDemoAgentBtn" title="Fill credentials for verified Agent account (can list properties)">
+                <span class="auth-demo__badge auth-demo__badge--agent">Agent</span>
+                <span>Demo Agent</span>
+              </button>
+              <button type="button" class="auth-demo__btn" id="fillDemoSeekerBtn" title="Fill credentials for Client account (can book tours & save favorites)">
+                <span class="auth-demo__badge auth-demo__badge--seeker">Client</span>
+                <span>Demo Client</span>
+              </button>
+            </div>
           </div>
 
           <!-- Error/Success messages -->
