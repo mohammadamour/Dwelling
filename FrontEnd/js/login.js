@@ -71,6 +71,40 @@ function initLoginForm() {
   });
 }
 
+// Ensures demo quick access UI is present even if browser cached an older HTML document
+function ensureDemoCredentialsCard() {
+  let card = document.getElementById('authDemoCard');
+  const form = document.getElementById('loginForm');
+  if (!card && form) {
+    card = document.createElement('div');
+    card.className = 'auth-demo';
+    card.id = 'authDemoCard';
+    card.innerHTML = `
+      <div class="auth-demo__header">
+        <span class="auth-demo__title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Demo Quick Access
+        </span>
+        <span class="auth-demo__hint">1-click test fill</span>
+      </div>
+      <p class="auth-demo__subtitle">Instant login credentials to test all platform features without creating an account:</p>
+      <div class="auth-demo__actions">
+        <button type="button" class="auth-demo__btn" id="fillDemoAgentBtn" title="Fill credentials for verified Agent account (can list properties)">
+          <span class="auth-demo__badge auth-demo__badge--agent">Agent</span>
+          <span>Demo Agent</span>
+        </button>
+        <button type="button" class="auth-demo__btn" id="fillDemoSeekerBtn" title="Fill credentials for Client account (can book tours & save favorites)">
+          <span class="auth-demo__badge auth-demo__badge--seeker">Client</span>
+          <span>Demo Client</span>
+        </button>
+      </div>
+    `;
+    form.parentNode.insertBefore(card, form);
+  }
+}
+
 // Quick-fill demo credentials for testing and recruiter evaluation
 function initDemoCredentials() {
   const agentBtn = $('#fillDemoAgentBtn');
@@ -128,6 +162,7 @@ function initDemoCredentials() {
 
 // Initialize login page
 function initLoginPage() {
+  ensureDemoCredentialsCard();
   initLoginForm();
   initDemoCredentials();
 }
