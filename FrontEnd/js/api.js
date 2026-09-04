@@ -78,12 +78,87 @@ export function removeAuthToken() {
 }
 
 /**
- * Check if user is authenticated
- * @returns {boolean} True if token exists
+ * Safely decode JWT payload without verifying signature (verified server-side).
+ * Compatible across browser and Node runtime environments.
+ * @param {string} token - Raw JWT token
+ * @returns {Record<string, any>|null} Parsed payload object or null if malformed
+ */
+export function decodeJwtPayload(token) {
+  if (!token || typeof token !== 'string') {
+    return null;
+  }
+
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  try {
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+    let jsonString = '';
+    if (typeof atob === 'function') {
+      jsonString = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+    } else if (typeof Buffer !== 'undefined') {
+      jsonString = Buffer.from(base64, 'base64').toString('utf8');
+    } else {
+      return null;
+    }
+
+    return JSON.parse(jsonString);
+  } catch (_error) {
+    return null;
+  }
+}
+
+/**
+ * Determine whether a token or payload is expired according to its 'exp' timestamp.
+ * @param {string|Record<string, any>} tokenOrPayload
+ * @returns {boolean} True if expired or invalid; false if still valid
+ */
+export function isTokenExpired(tokenOrPayload) {
+  const payload =
+    typeof tokenOrPayload === 'string'
+      ? decodeJwtPayload(tokenOrPayload)
+      : tokenOrPayload;
+
+  if (!payload || typeof payload !== 'object') {
+    return true;
+  }
+
+  // If token contains no 'exp' claim, client cannot declare it expired
+  if (typeof payload.exp !== 'number') {
+    return false;
+  }
+
+  // exp claim is in seconds; compare against current millisecond timestamp
+  return Date.now() >= payload.exp * 1000;
+}
+
+/**
+ * Check if user is authenticated with a valid, non-expired token.
+ * Automatically purges the token from localStorage if it has expired or is corrupted.
+ * @returns {boolean} True if authenticated with an active, unexpired session
  */
 export function isAuthenticated() {
   const token = getAuthToken();
-  return !!token && token.split('.').length === 3;
+  if (!token) {
+    return false;
+  }
+
+  const payload = decodeJwtPayload(token);
+  if (!payload || isTokenExpired(payload)) {
+    removeAuthToken();
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -121,27 +196,23 @@ export function normalizeApiPayload(payload) {
 }
 
 /**
- * Parse the JWT payload to get logged in user details (id, email, role)
+ * Parse the JWT payload to get logged in user details (id, email, role).
+ * Automatically purges localStorage and returns null if the token has expired or is invalid.
  * @returns {Object|null} User details or null if not authenticated
  */
 export function getAuthUser() {
   const token = getAuthToken();
-  if (!token || token.split('.').length !== 3) {
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeJwtPayload(token);
+  if (!payload || isTokenExpired(payload)) {
     removeAuthToken();
     return null;
   }
 
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    removeAuthToken();
-    return null;
-  }
+  return payload;
 }
 
 // Fetch Wrapper
@@ -538,6 +609,8 @@ const api = {
   getAuthToken,
   setAuthToken,
   removeAuthToken,
+  decodeJwtPayload,
+  isTokenExpired,
   isAuthenticated,
   
   // Fetch wrapper

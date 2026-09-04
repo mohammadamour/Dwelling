@@ -151,7 +151,7 @@ NODE_ENV=development
 
 # Database Connection (Supabase PostgreSQL)
 # Transaction-mode connection pooler:
-DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
 
 # Direct connection pooler (used for schema migrations):
 DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
