@@ -338,6 +338,18 @@ export const createProperty = async (req: any, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
+    // Verify agent account exists in database (guards against stale JWTs after database resets/reseeds)
+    const agentUser = await prisma.user.findUnique({
+      where: { id: agentId },
+      select: { id: true, role: true },
+    });
+
+    if (!agentUser || (agentUser.role !== 'AGENT' && agentUser.role !== 'ADMIN')) {
+      return res.status(401).json({
+        error: 'Authenticated agent account is invalid or no longer exists. Please log in again.',
+      });
+    }
+
     const {
       title,
       description,
@@ -368,16 +380,16 @@ export const createProperty = async (req: any, res: Response) => {
     if (priceType !== 'RENT' && priceType !== 'SALE') {
       return res.status(400).json({ error: 'PriceType must be RENT or SALE' });
     }
-    const numBeds = Number(beds);
-    if (isNaN(numBeds) || numBeds < 0) {
+    const rawBeds = Number(beds);
+    if (isNaN(rawBeds) || rawBeds < 0) {
       return res.status(400).json({ error: 'Beds must be a non-negative number' });
     }
-    const numBaths = Number(baths);
-    if (isNaN(numBaths) || numBaths < 0) {
+    const rawBaths = Number(baths);
+    if (isNaN(rawBaths) || rawBaths < 0) {
       return res.status(400).json({ error: 'Baths must be a non-negative number' });
     }
-    const numSqft = Number(sqft);
-    if (isNaN(numSqft) || numSqft <= 0) {
+    const rawSqft = Number(sqft);
+    if (isNaN(rawSqft) || rawSqft <= 0) {
       return res.status(400).json({ error: 'Sqft must be a positive number' });
     }
     if (!address || typeof address !== 'string' || !address.trim()) {
@@ -397,16 +409,43 @@ export const createProperty = async (req: any, res: Response) => {
       return res.status(400).json({ error: 'Type must be HOUSE, APT, CONDO, or TOWNHOUSE' });
     }
 
-    // Generate unique slug
-    const cleanTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const slug = `${cleanTitle}-${randomSuffix}`;
+    // Ensure integer types matching Prisma schema (beds Int, baths Int, sqft Int)
+    const numBeds = Math.max(0, Math.round(rawBeds));
+    const numBaths = Math.max(0, Math.round(rawBaths));
+    const numSqft = Math.max(1, Math.round(rawSqft));
 
-    // Handle images
-    const imageList = Array.isArray(images) ? images.filter((img: any) => typeof img === 'string' && img.trim()) : [];
+    // Generate collision-resistant unique slug
+    let cleanTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (!cleanTitle) cleanTitle = 'property';
+    let slug = `${cleanTitle}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const existingPropertyWithSlug = await prisma.property.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (existingPropertyWithSlug) {
+      slug = `${cleanTitle}-${Date.now().toString(36)}-${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    // Handle images flexibly: accept string array, object array with url, or single fallback url
+    let rawImageList: any[] = [];
+    if (Array.isArray(images)) {
+      rawImageList = images;
+    } else if (req.body.imageUrl || req.body.image) {
+      rawImageList = [req.body.imageUrl || req.body.image];
+    }
+
+    const imageList: string[] = rawImageList
+      .map((img: any) => {
+        if (typeof img === 'string') return img.trim();
+        if (img && typeof img === 'object' && typeof img.url === 'string') return img.url.trim();
+        return '';
+      })
+      .filter((url: string) => url.length > 0);
+
     const propertyImages = imageList.map((url: string, idx: number) => ({
-      url: url.trim(),
-      altText: `${title} - Image ${idx + 1}`,
+      url,
+      altText: `${title.trim()} - Image ${idx + 1}`,
       sortOrder: idx,
       isPrimary: idx === 0,
     }));
@@ -438,8 +477,14 @@ export const createProperty = async (req: any, res: Response) => {
     });
 
     res.status(201).json({ data: newProperty });
-  } catch (error) {
+  } catch (error: any) {
     console.error('POST /api/properties error:', error);
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ error: 'A property with a similar title or slug already exists. Please try again.' });
+    }
+    if (error?.code === 'P2003') {
+      return res.status(400).json({ error: 'The referenced agent account is invalid or no longer exists. Please log in again.' });
+    }
     res.status(500).json({ error: 'Failed to create property listing' });
   }
 };

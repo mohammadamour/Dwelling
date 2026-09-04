@@ -119,7 +119,13 @@ function initAddPropertyForm() {
 
     } catch (error) {
       form.classList.remove('auth-form--loading');
-      showError(error.message || 'Failed to list property. Please check inputs and try again.');
+      const msg = error.message || 'Failed to list property. Please check inputs and try again.';
+      showError(msg);
+      if (msg.toLowerCase().includes('log in') || msg.toLowerCase().includes('authenticated')) {
+        setTimeout(() => {
+          window.location.href = 'login.html?redirect=add-property.html';
+        }, 2000);
+      }
     }
   });
 

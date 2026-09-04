@@ -18,6 +18,8 @@ let currentImageIndex = 0;
 let propertyImages = [];
 let currentProperty = null;
 
+const DEFAULT_PROPERTY_IMAGE = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 500%22 width=%22100%25%22 height=%22100%25%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%231E293B%22/%3E%3Cpath d=%22M360 210 L400 170 L440 210 L440 290 L360 290 Z%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%228%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M385 290 L385 245 L415 245 L415 290%22 fill=%22none%22 stroke=%22%2364748B%22 stroke-width=%228%22/%3E%3Ctext x=%2250%25%22 y=%22340%22 text-anchor=%22middle%22 fill=%22%2394A3B8%22 font-family=%22sans-serif%22 font-size=%2218%22%3ENo Image Available%3C/text%3E%3C/svg%3E';
+
 // Get property ID from URL
 function getPropertyId() {
   const params = new URLSearchParams(window.location.search);
@@ -98,16 +100,31 @@ async function loadPropertyDetails() {
     if (propertyType) propertyType.textContent = property.type || 'House';
     if (featuredBadge) featuredBadge.hidden = !property.featured;
 
-    // Update gallery
-    propertyImages = property.images || [];
-    if (propertyImages.length > 0) {
-      updateGallery();
-      renderGalleryThumbs();
+    // Update gallery with normalized images and fallback placeholder
+    const rawImages = Array.isArray(property.images) ? property.images : [];
+    propertyImages = rawImages
+      .map((img, idx) => {
+        if (typeof img === 'string' && img.trim()) {
+          return { url: img.trim(), altText: `${property.title || 'Property'} - Image ${idx + 1}` };
+        }
+        if (img && typeof img === 'object' && typeof img.url === 'string' && img.url.trim()) {
+          return { url: img.url.trim(), altText: img.altText || `${property.title || 'Property'} - Image ${idx + 1}` };
+        }
+        return null;
+      })
+      .filter(Boolean);
 
-      const galleryNav = $('#galleryNav');
-      if (galleryNav && propertyImages.length > 1) {
-        galleryNav.hidden = false;
-      }
+    if (propertyImages.length === 0) {
+      propertyImages = [{ url: DEFAULT_PROPERTY_IMAGE, altText: property.title || 'Property photo' }];
+    }
+
+    currentImageIndex = 0;
+    updateGallery();
+    renderGalleryThumbs();
+
+    const galleryNav = $('#galleryNav');
+    if (galleryNav) {
+      galleryNav.hidden = propertyImages.length <= 1;
     }
 
     // Update specifications
@@ -354,8 +371,13 @@ function renderReviews(reviews) {
 function updateGallery() {
   const mainImage = $('#mainImage');
   if (mainImage && propertyImages[currentImageIndex]) {
-    mainImage.src = propertyImages[currentImageIndex].url;
-    mainImage.alt = propertyImages[currentImageIndex].altText || 'Property photo';
+    const currentImg = propertyImages[currentImageIndex];
+    mainImage.src = currentImg.url;
+    mainImage.alt = currentImg.altText || 'Property photo';
+    mainImage.onerror = function () {
+      this.onerror = null;
+      this.src = DEFAULT_PROPERTY_IMAGE;
+    };
   }
 
   $$('.gallery-thumb').forEach((thumb, index) => {
@@ -370,11 +392,15 @@ function updateGallery() {
 // Render gallery thumbnails
 function renderGalleryThumbs() {
   const thumbsContainer = $('#galleryThumbs');
-  if (!thumbsContainer || propertyImages.length <= 1) return;
+  if (!thumbsContainer) return;
+  if (propertyImages.length <= 1) {
+    thumbsContainer.innerHTML = '';
+    return;
+  }
 
   thumbsContainer.innerHTML = propertyImages.map((img, index) => `
     <div class="gallery-thumb ${index === currentImageIndex ? 'gallery-thumb--active' : ''}" data-index="${index}">
-      <img src="${img.url}" alt="${img.altText || 'Thumbnail'}" />
+      <img src="${img.url}" alt="${img.altText || 'Thumbnail'}" onerror="this.onerror=null;this.src='${DEFAULT_PROPERTY_IMAGE}'" />
     </div>
   `).join('');
 

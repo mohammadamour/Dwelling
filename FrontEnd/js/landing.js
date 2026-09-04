@@ -18,11 +18,12 @@ function renderPropertyCard(p, idx) {
   const primaryImg =
     (p.images && p.images.find((i) => i.isPrimary)) ||
     (p.images && p.images[0]);
+  const rawUrl = typeof primaryImg === 'string' ? primaryImg : primaryImg?.url;
   const imgUrl =
-    primaryImg && primaryImg.url
-      ? primaryImg.url
+    rawUrl && rawUrl.trim()
+      ? rawUrl.trim()
       : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
-  const imgAlt = (primaryImg && primaryImg.altText) || p.title || 'Property image';
+  const imgAlt = (typeof primaryImg === 'object' && primaryImg?.altText) || p.title || 'Property image';
   const priceLabel =
     p.priceType === 'RENT'
       ? fmtCurrency(p.price) + '/mo'
