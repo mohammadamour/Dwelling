@@ -21,6 +21,62 @@ interface PropertyQueryParams {
   limit?: string;
 }
 
+/**
+ * Selective projection for property card list queries.
+ * Excludes heavy text columns (such as multi-paragraph descriptions)
+ * to minimize payload bandwidth and JSON serialization overhead.
+ */
+export const PROPERTY_CARD_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  price: true,
+  priceType: true,
+  beds: true,
+  baths: true,
+  sqft: true,
+  address: true,
+  city: true,
+  state: true,
+  zip: true,
+  lat: true,
+  lng: true,
+  type: true,
+  status: true,
+  featured: true,
+  builtYear: true,
+  petFriendly: true,
+  hasParking: true,
+  agentId: true,
+  createdAt: true,
+  updatedAt: true,
+  images: {
+    select: {
+      id: true,
+      url: true,
+      altText: true,
+      isPrimary: true,
+      sortOrder: true,
+    },
+    orderBy: { sortOrder: 'asc' as const },
+  },
+  agent: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+      agentProfile: {
+        select: {
+          rating: true,
+          yearsExperience: true,
+          agencyName: true,
+        },
+      },
+    },
+  },
+} as const;
+
 export const getProperties = async (req: any, res: Response) => {
   try {
     const query = req.query as PropertyQueryParams;
@@ -123,24 +179,7 @@ export const getProperties = async (req: any, res: Response) => {
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
         where,
-        include: {
-          images: { orderBy: { sortOrder: 'asc' } },
-          agent: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              avatarUrl: true,
-              agentProfile: {
-                select: {
-                  rating: true,
-                  yearsExperience: true,
-                  agencyName: true,
-                },
-              },
-            },
-          },
-        },
+        select: PROPERTY_CARD_SELECT,
         orderBy,
         take: limit,
         skip,
@@ -311,22 +350,7 @@ export const getFeaturedProperties = async (req: any, res: Response) => {
 
     const properties = await prisma.property.findMany({
       where: { featured: true },
-      include: {
-        images: { orderBy: { sortOrder: 'asc' } },
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            avatarUrl: true,
-            agentProfile: {
-              select: {
-                rating: true,
-                yearsExperience: true,
-              },
-            },
-          },
-        },
-      },
+      select: PROPERTY_CARD_SELECT,
       orderBy: { createdAt: 'desc' },
       take: limit,
     });

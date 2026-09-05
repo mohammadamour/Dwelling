@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
+import { PROPERTY_CARD_SELECT } from './propertyController';
 
 function getParam(param: string | string[] | undefined): string {
   if (!param) return '';
@@ -195,24 +196,7 @@ export const getMyFavorites = async (req: AuthRequest, res: Response) => {
       where: { userId: req.user.id },
       include: {
         property: {
-          include: {
-            images: { orderBy: { sortOrder: 'asc' } },
-            agent: {
-              select: {
-                id: true,
-                name: true,
-                avatarUrl: true,
-                phone: true,
-                email: true,
-              },
-            },
-            _count: {
-              select: {
-                favorites: true,
-                reviews: true,
-              },
-            },
-          },
+          select: PROPERTY_CARD_SELECT,
         },
       },
       orderBy: { createdAt: 'desc' },
