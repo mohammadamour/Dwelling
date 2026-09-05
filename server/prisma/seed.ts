@@ -2,6 +2,7 @@ import { PrismaClient, PropertyType, PriceType, PropertyStatus, Role } from '@pr
 import bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker';
 import { seedPropertyReviews } from './factories/reviewFactory';
+import { generatePropertyDescription } from './factories/propertyDescriptionFactory';
 
 const prisma = new PrismaClient();
 
@@ -110,10 +111,28 @@ function generateProperty(index: number, agentId: string): PropertyInput {
     `Luxury ${type.toLowerCase()} in ${cityData.city}`,
   ]);
 
+  const builtYear = faker.number.int({ min: 1990, max: 2024 });
+  const petFriendly = faker.datatype.boolean();
+  const hasParking = faker.datatype.boolean();
+
+  const description = generatePropertyDescription({
+    title,
+    type,
+    city: cityData.city,
+    beds,
+    baths,
+    sqft,
+    price: basePrice,
+    priceType,
+    hasParking,
+    petFriendly,
+    builtYear,
+  });
+
   return {
     title,
     slug: '',
-    description: faker.lorem.paragraphs(3),
+    description,
     price: basePrice,
     priceType,
     beds,
@@ -128,9 +147,9 @@ function generateProperty(index: number, agentId: string): PropertyInput {
     type,
     status,
     featured: index < 5,
-    builtYear: faker.number.int({ min: 1990, max: 2024 }),
-    petFriendly: faker.datatype.boolean(),
-    hasParking: faker.datatype.boolean(),
+    builtYear,
+    petFriendly,
+    hasParking,
     images: getRandomImages(faker.number.int({ min: 2, max: 5 })),
   };
 }
