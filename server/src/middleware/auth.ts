@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { JWT_SECRET } from '../config/env';
 
 export interface AuthUser {
@@ -64,31 +64,22 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     // Verify user exists in database (guards against stale JWTs after database reseeds or account deletions)
-    const prisma = (req as any).prisma as PrismaClient;
-    if (prisma && typeof prisma.user?.findUnique === 'function') {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { id: true, email: true, role: true },
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!dbUser) {
+      return res.status(401).json({
+        error: 'Authenticated user account no longer exists. Please log in again.'
       });
-
-      if (!dbUser) {
-        return res.status(401).json({
-          error: 'Authenticated user account no longer exists. Please log in again.'
-        });
-      }
-
-      req.user = {
-        id: dbUser.id,
-        email: dbUser.email,
-        role: dbUser.role as AuthUser['role'],
-      };
-    } else {
-      req.user = {
-        id: decoded.id,
-        email: typeof decoded.email === 'string' ? decoded.email : '',
-        role: decoded.role as AuthUser['role'],
-      };
     }
+
+    req.user = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role as AuthUser['role'],
+    };
 
     next();
   } catch (error) {
@@ -146,24 +137,15 @@ export const optionalAuth = async (req: AuthRequest, _res: Response, next: NextF
       if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
         const decoded = jwt.verify(parts[1], JWT_SECRET, { algorithms: ['HS256'] }) as Record<string, any>;
         if (decoded && decoded.id && decoded.role && VALID_ROLES.includes(decoded.role as any)) {
-          const prisma = (req as any).prisma as PrismaClient;
-          if (prisma && typeof prisma.user?.findUnique === 'function') {
-            const dbUser = await prisma.user.findUnique({
-              where: { id: decoded.id },
-              select: { id: true, email: true, role: true },
-            });
-            if (dbUser) {
-              req.user = {
-                id: dbUser.id,
-                email: dbUser.email,
-                role: dbUser.role as AuthUser['role'],
-              };
-            }
-          } else {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: decoded.id },
+            select: { id: true, email: true, role: true },
+          });
+          if (dbUser) {
             req.user = {
-              id: decoded.id,
-              email: typeof decoded.email === 'string' ? decoded.email : '',
-              role: decoded.role as AuthUser['role'],
+              id: dbUser.id,
+              email: dbUser.email,
+              role: dbUser.role as AuthUser['role'],
             };
           }
         }

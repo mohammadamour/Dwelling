@@ -22,4 +22,4 @@ router.put('/me', authenticate, updateUserProfile);
  */
 router.patch('/:id/role', authenticate, requireRole(['ADMIN']), updateUserRole);
 
-module.exports = router;
+export default router;

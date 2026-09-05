@@ -1,5 +1,6 @@
 import { Response } from 'express';
-import { PrismaClient, TourType, TourStatus } from '@prisma/client';
+import { TourType, TourStatus } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
 function getParam(param: string | string[] | undefined): string {
@@ -51,8 +52,6 @@ export const createTourBooking = async (req: AuthRequest, res: Response) => {
         error: `Invalid tour type. Must be one of: ${VALID_TOUR_TYPES.join(', ')}`,
       });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     // Verify property exists
     const property = await prisma.property.findUnique({
@@ -137,8 +136,6 @@ export const getMyTours = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const prisma = (req as any).prisma as PrismaClient;
-
     const bookings = await prisma.tourBooking.findMany({
       where: { userId: req.user.id },
       include: {
@@ -204,8 +201,6 @@ export const updateTourStatus = async (req: AuthRequest, res: Response) => {
         error: `Invalid status. Must be one of: ${VALID_TOUR_STATUSES.join(', ')}`,
       });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const booking = await prisma.tourBooking.findUnique({
       where: { id },

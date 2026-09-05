@@ -241,6 +241,124 @@ function initYearUpdate() {
 }
 
 /**
+ * Resolves badge tag metadata for a property card.
+ * @param {Object} p - Property object
+ * @param {number} [idx] - Optional index in grid
+ * @returns {{ cls: string, text: string } | null}
+ */
+function tagForProperty(p, idx) {
+  if (p.featured) return { cls: '', text: 'Featured' };
+  if (idx === 1) return { cls: 'property-card__tag--alt', text: 'New' };
+  if (idx === 2) return { cls: 'property-card__tag--dark', text: 'Hot deal' };
+  return null;
+}
+
+/**
+ * Creates and returns an interactive property card DOM element.
+ * Shared across landing and catalog pages to eliminate duplicated markup.
+ * @param {Object} p - Property entity
+ * @param {number} [idx] - Optional index in grid
+ * @param {Object} [options] - Configuration options
+ * @returns {HTMLLIElement}
+ */
+function renderPropertyCard(p, idx, options = {}) {
+  const primaryImg =
+    (p.images && p.images.find((i) => i.isPrimary)) ||
+    (p.images && p.images[0]);
+  const rawUrl = typeof primaryImg === 'string' ? primaryImg : primaryImg?.url;
+  const imgUrl =
+    rawUrl && rawUrl.trim()
+      ? rawUrl.trim()
+      : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
+  const imgAlt = (typeof primaryImg === 'object' && primaryImg?.altText) || p.title || 'Property image';
+  const priceLabel =
+    p.priceType === 'RENT'
+      ? fmtCurrency(p.price) + '/mo'
+      : fmtCurrency(p.price);
+  const bedsLabel = p.beds === 0 ? 'Studio' : p.beds + ' Beds';
+  const firstAddr = p.address ? (p.address.split(',')[0] || p.city) : p.city;
+  const bathsSuffix = p.baths !== 1 ? 's' : '';
+  const sqftNum = Number(p.sqft) || 0;
+  const addressLine =
+    firstAddr +
+    ', ' +
+    p.city +
+    ' · ' +
+    bedsLabel +
+    ' · ' +
+    p.baths +
+    ' Bath' +
+    bathsSuffix +
+    ' · ' +
+    sqftNum.toLocaleString() +
+    ' sqft';
+  const tag = tagForProperty(p, idx);
+
+  const isSubPage = typeof window !== 'undefined' && window.location.pathname.includes('/pages/');
+  const detailsUrlPrefix = options.detailsUrlPrefix ?? (isSubPage ? '' : 'pages/');
+  const detailsHref = `${detailsUrlPrefix}property-details.html?id=${encodeURIComponent(p.id)}`;
+
+  const li = document.createElement('li');
+  li.className = 'property-card reveal';
+  if (p && p.id) li.setAttribute('data-property-id', String(p.id));
+
+  const tagHtml = tag
+    ? '<span class="property-card__tag ' + tag.cls + '">' + tag.text + '</span>'
+    : '';
+  const priceInner = priceLabel.replace(/^\$/, '');
+  const safeTitle = p.title || 'Property';
+
+  li.innerHTML =
+    '<div class="property-card__media">' +
+    '<a href="' + detailsHref + '">' +
+    '<img src="' +
+    imgUrl +
+    '" alt="' +
+    imgAlt +
+    '" loading="lazy" decoding="async" onerror="this.style.opacity=0.15;this.style.background=\'linear-gradient(135deg,#e2e8f0,#cbd5e1)\'" />' +
+    '</a>' +
+    tagHtml +
+    '<button type="button" class="property-card__fav" data-id="' +
+    p.id +
+    '" aria-label="Save ' +
+    safeTitle +
+    ' to favorites" aria-pressed="' +
+    (p.isFavorite ? 'true' : 'false') +
+    '"' +
+    (p.isFavorite ? ' style="color: var(--c-accent);"' : '') +
+    '>' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="' +
+    (p.isFavorite ? 'currentColor' : 'none') +
+    '" aria-hidden="true">' +
+    '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '</button>' +
+    '</div>' +
+    '<div class="property-card__body">' +
+    '<div class="property-card__row">' +
+    '<p class="property-card__price"><span class="dollar">$</span>' +
+    priceInner +
+    '</p>' +
+    '<a href="' + detailsHref + '" class="property-card__arrow" aria-label="View ' +
+    safeTitle +
+    '">' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+    '<path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>' +
+    '</a>' +
+    '</div>' +
+    '<h3>' +
+    safeTitle +
+    '</h3>' +
+    '<p class="property-card__address">' +
+    addressLine +
+    '</p>' +
+    '</div>';
+
+  return li;
+}
+
+/**
  * Initialize all shared functionality
  */
 function initShared() {
@@ -264,6 +382,8 @@ export {
   $,
   $$,
   fmtCurrency,
+  tagForProperty,
+  renderPropertyCard,
   renderNavbar,
   initMobileDrawer,
   initScrollState,
@@ -272,3 +392,4 @@ export {
   initYearUpdate,
   initShared
 };
+

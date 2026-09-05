@@ -70,4 +70,4 @@ router.get('/:id/reviews', getPropertyReviews);
  */
 router.post('/:id/reviews', authenticate, createPropertyReview);
 
-module.exports = router;
+export default router;

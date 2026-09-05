@@ -1,5 +1,6 @@
 import { Response } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
 const VALID_ROLES: Role[] = [Role.SEEKER, Role.AGENT, Role.ADMIN];
@@ -13,8 +14,6 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -80,7 +79,6 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     }
 
     const { name, email, phone, avatarUrl, bio } = req.body || {};
-    const prisma = (req as any).prisma as PrismaClient;
 
     // Validation
     if (email !== undefined) {
@@ -192,8 +190,6 @@ export const updateUserRole = async (req: AuthRequest, res: Response) => {
         error: `Invalid role specified. Allowed values: ${VALID_ROLES.join(', ')}`
       });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const existingUser = await prisma.user.findUnique({
       where: { id: targetUserId },

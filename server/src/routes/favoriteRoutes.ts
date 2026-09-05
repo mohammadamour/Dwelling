@@ -33,4 +33,4 @@ router.post('/:propertyId', authenticate, addFavorite);
  */
 router.delete('/:propertyId', authenticate, removeFavorite);
 
-module.exports = router;
+export default router;

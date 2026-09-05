@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
 function getParam(param: string | string[] | undefined): string {
@@ -32,8 +32,6 @@ export const createPropertyReview = async (req: AuthRequest, res: Response) => {
     if (!comment || typeof comment !== 'string' || comment.trim().length === 0) {
       return res.status(400).json({ error: 'A written review comment is required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     // Verify property exists
     const property = await prisma.property.findUnique({
@@ -89,8 +87,6 @@ export const getPropertyReviews = async (req: Request, res: Response) => {
     if (!propertyId) {
       return res.status(400).json({ error: 'Property ID is required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const reviews = await prisma.review.findMany({
       where: { propertyId },

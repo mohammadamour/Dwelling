@@ -4,9 +4,7 @@
  */
 
 import { createProperty, getAuthUser, isAuthenticated } from './api.js';
-
-// DOM Helper
-const $ = (sel) => document.querySelector(sel);
+import { $ } from './shared.js';
 
 // Check authentication and roles
 function checkAccess() {

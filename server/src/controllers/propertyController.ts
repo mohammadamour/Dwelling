@@ -1,5 +1,6 @@
 import { Response } from 'express';
-import { PrismaClient, PropertyType, PriceType } from '@prisma/client';
+import { PropertyType, PriceType } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 interface PropertyQueryParams {
   search?: string;
@@ -22,7 +23,6 @@ interface PropertyQueryParams {
 
 export const getProperties = async (req: any, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
     const query = req.query as PropertyQueryParams;
 
     // Support both 'search' and 'q' for search keywords
@@ -186,7 +186,6 @@ export const getProperties = async (req: any, res: Response) => {
 
 export const getPropertyById = async (req: any, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
     const rawId = req.params.id;
     const id: string = Array.isArray(rawId) ? rawId[0] || '' : rawId || '';
 
@@ -267,9 +266,10 @@ export const getPropertyById = async (req: any, res: Response) => {
 
 export const getPropertyStats = async (req: any, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const [totalListings, totalAgents, citiesData, avgPrice, featuredCount] = await Promise.all([
+    const [totalListings, totalAgents, citiesData, avgPrice, featuredCount, weeklyListingsCount, reviewAggregate] = await Promise.all([
       prisma.property.count(),
       prisma.user.count({ where: { role: 'AGENT' } }),
       prisma.property.findMany({
@@ -278,7 +278,17 @@ export const getPropertyStats = async (req: any, res: Response) => {
       }),
       prisma.property.aggregate({ _avg: { price: true } }),
       prisma.property.count({ where: { featured: true } }),
+      prisma.property.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+      prisma.review.aggregate({
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
     ]);
+
+    // Calculate actual client satisfaction from review ratings (or fallback to 98.0 if no reviews yet)
+    const clientSatisfaction = reviewAggregate._count.rating > 0 && reviewAggregate._avg.rating
+      ? parseFloat(((reviewAggregate._avg.rating / 5) * 100).toFixed(1))
+      : 98.0;
 
     res.json({
       totalListings,
@@ -286,8 +296,8 @@ export const getPropertyStats = async (req: any, res: Response) => {
       totalCities: citiesData.length,
       averagePrice: Math.round(avgPrice._avg.price || 0),
       featuredCount,
-      listingsAddedWeekly: Math.max(1, Math.round(totalListings * 0.05)),
-      clientSatisfaction: 97.2,
+      listingsAddedWeekly: Math.max(1, weeklyListingsCount),
+      clientSatisfaction,
     });
   } catch (error) {
     console.error('GET /api/properties/stats error:', error);
@@ -297,7 +307,6 @@ export const getPropertyStats = async (req: any, res: Response) => {
 
 export const getFeaturedProperties = async (req: any, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
     const limit = Math.min(Math.max(1, parseInt(req.query.limit as string || '6', 10)), 20);
 
     const properties = await prisma.property.findMany({
@@ -331,7 +340,6 @@ export const getFeaturedProperties = async (req: any, res: Response) => {
 
 export const createProperty = async (req: any, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
     const agentId = req.user?.id;
 
     if (!agentId) {

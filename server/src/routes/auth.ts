@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest, authenticate } from '../middleware/auth';
 import { JWT_SECRET } from '../config/env';
 import { getUserProfile } from '../controllers/userController';
@@ -72,8 +73,6 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     const sanitizedPhone = typeof phone === 'string' && phone.trim().length > 0 ? phone.trim().substring(0, 30) : null;
 
-    const prisma = (req as any).prisma as PrismaClient;
-
     // 3. Uniqueness check
     const existingUser = await prisma.user.findUnique({
       where: { email: normalizedEmail }
@@ -141,7 +140,6 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const prisma = (req as any).prisma as PrismaClient;
 
     // Find user by normalized email
     const user = await prisma.user.findUnique({
@@ -198,4 +196,4 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
  */
 router.get('/me', authenticate, getUserProfile);
 
-module.exports = router;
+export default router;

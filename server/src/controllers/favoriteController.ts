@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AuthRequest } from '../middleware/auth';
 
 function getParam(param: string | string[] | undefined): string {
@@ -21,8 +21,6 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
     if (!propertyId) {
       return res.status(400).json({ error: 'Property ID is required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     // Verify property exists
     const property = await prisma.property.findUnique({
@@ -102,8 +100,6 @@ export const addFavorite = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Property ID is required' });
     }
 
-    const prisma = (req as any).prisma as PrismaClient;
-
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
       select: { id: true },
@@ -163,8 +159,6 @@ export const removeFavorite = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Property ID is required' });
     }
 
-    const prisma = (req as any).prisma as PrismaClient;
-
     await prisma.favorite.deleteMany({
       where: {
         userId: req.user.id,
@@ -196,8 +190,6 @@ export const getMyFavorites = async (req: AuthRequest, res: Response) => {
     if (!req.user || !req.user.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const favorites = await prisma.favorite.findMany({
       where: { userId: req.user.id },

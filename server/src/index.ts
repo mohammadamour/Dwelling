@@ -1,22 +1,21 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import fs = require('fs');
-import path = require('path');
-import express = require('express');
-import cors = require('cors');
+import fs from 'fs';
+import path from 'path';
+import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 import { getAllowedOrigins, PORT, NODE_ENV } from './config/env';
-import propertyRoutes = require('./routes/propertyRoutes');
-import statsRoutes = require('./routes/stats');
-import authRoutes = require('./routes/auth');
-import userRoutes = require('./routes/userRoutes');
-import favoriteRoutes = require('./routes/favoriteRoutes');
-import tourRoutes = require('./routes/tourRoutes');
-import agentRoutes = require('./routes/agentRoutes');
+import propertyRoutes from './routes/propertyRoutes';
+import statsRoutes from './routes/stats';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/userRoutes';
+import favoriteRoutes from './routes/favoriteRoutes';
+import tourRoutes from './routes/tourRoutes';
+import agentRoutes from './routes/agentRoutes';
 import { generalApiLimiter, newsletterLimiter } from './middleware/rateLimiter';
 
-const prisma = new PrismaClient();
 const app = express();
 
 // Trust reverse proxy hops (required for Render.com and express-rate-limit client IP resolution)
@@ -55,12 +54,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Make prisma available to routes via request object
-app.use((req, _res, next) => {
-  (req as any).prisma = prisma;
-  next();
-});
-
 // Root health check
 app.get('/', (_req, res) => {
   res.json({ status: 'ok', message: 'Dwelling API is running' });
@@ -70,13 +63,13 @@ app.get('/', (_req, res) => {
 app.use('/api', generalApiLimiter);
 
 // API Routes
-app.use('/api/auth', authRoutes as express.Router);
-app.use('/api/users', userRoutes as express.Router);
-app.use('/api/properties', propertyRoutes as express.Router);
-app.use('/api/favorites', favoriteRoutes as express.Router);
-app.use('/api/tours', tourRoutes as express.Router);
-app.use('/api/agents', agentRoutes as express.Router);
-app.use('/api', statsRoutes as express.Router);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/properties', propertyRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/tours', tourRoutes);
+app.use('/api/agents', agentRoutes);
+app.use('/api', statsRoutes);
 
 /**
  * POST /api/newsletter

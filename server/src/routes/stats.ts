@@ -10,4 +10,4 @@ const router = Router();
  */
 router.get('/stats', getPropertyStats);
 
-module.exports = router;
+export default router;

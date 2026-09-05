@@ -15,4 +15,4 @@ router.get('/', getAgents);
  */
 router.get('/:id', getAgentById);
 
-module.exports = router;
+export default router;

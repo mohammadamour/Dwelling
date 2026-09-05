@@ -26,4 +26,4 @@ router.post('/', authenticate, createTourBooking);
  */
 router.patch('/:id/status', authenticate, updateTourStatus);
 
-module.exports = router;
+export default router;

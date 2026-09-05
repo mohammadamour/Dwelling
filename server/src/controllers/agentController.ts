@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 function getParam(param: string | string[] | undefined): string {
   if (!param) return '';
@@ -12,8 +12,6 @@ function getParam(param: string | string[] | undefined): string {
  */
 export const getAgents = async (req: Request, res: Response) => {
   try {
-    const prisma = (req as any).prisma as PrismaClient;
-
     const agents = await prisma.user.findMany({
       where: { role: 'AGENT' },
       select: {
@@ -65,8 +63,6 @@ export const getAgentById = async (req: Request, res: Response) => {
     if (!id) {
       return res.status(400).json({ error: 'Agent ID is required' });
     }
-
-    const prisma = (req as any).prisma as PrismaClient;
 
     const agent = await prisma.user.findFirst({
       where: {

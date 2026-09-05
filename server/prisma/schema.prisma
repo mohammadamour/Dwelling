@@ -70,6 +70,15 @@ model Property {
   images       PropertyImage[]
   reviews      Review[]
   tourBookings TourBooking[]
+
+  @@index([city])
+  @@index([type])
+  @@index([status])
+  @@index([price])
+  @@index([featured])
+  @@index([agentId])
+  @@index([createdAt])
+  @@index([city, type, status])
 }
 
 model PropertyImage {
@@ -81,6 +90,8 @@ model PropertyImage {
   isPrimary  Boolean  @default(false)
   createdAt  DateTime @default(now())
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, sortOrder])
 }
 
 model Favorite {
@@ -105,6 +116,7 @@ model Review {
   reviewer   User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
 
   @@unique([reviewerId, propertyId])
+  @@index([propertyId])
 }
 
 model TourBooking {
@@ -118,6 +130,9 @@ model TourBooking {
   createdAt  DateTime   @default(now())
   property   Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([propertyId])
 }
 
 model NewsletterSubscriber {
