@@ -44,12 +44,14 @@ Dwelling employs a decoupled multi-page application (MPA) client communicating w
 ## ✨ Key Implemented Features
 
 ### 🔍 Property Catalog & Search
+
 - **Dynamic Filtering**: Filter listings by search keyword (`title`, `city`, `address`, `state`, `zip`), property type (`HOUSE`, `APT`, `CONDO`, `TOWNHOUSE`), price type (`RENT`, `SALE`), price range, bedrooms, bathrooms, and featured status.
 - **Server-Side Pagination & Sorting**: Paginated results with `page` and `limit`, sortable by price, date created, or featured priority.
 - **Single Property Details**: Rich detail view featuring a responsive two-column content grid, interactive photo gallery carousel, property specifications, agent profile card, and client reviews.
 - **Interactive Agent Inquiry Flow**: Stateful client-side inquiry drawer with character counting, dynamic agent-specific placeholders, loading simulation, and feedback confirmations.
 
 ### 🔐 Hardened Authentication & Security
+
 - **Secure Password Hashing**: Passwords salted and hashed with `bcryptjs`.
 - **JWT Verification**: Tokens signed and validated using explicit `HS256` algorithms with strict Bearer header parsing.
 - **Startup Secret Validation**: Fails gracefully on boot if `JWT_SECRET` is absent or set to an insecure default.
@@ -58,11 +60,13 @@ Dwelling employs a decoupled multi-page application (MPA) client communicating w
 - **Dynamic CORS**: Whitelists origins dynamically based on `ALLOWED_ORIGINS` / `CLIENT_URL`.
 
 ### 🏢 Real Estate Agent Workflows
+
 - **Agent Role Guard**: Dedicated `POST /api/properties` endpoint restricted to authenticated agents and administrators.
 - **Property Publishing**: Listing creation form capturing property specs, pricing, address details, and image galleries.
 - **Agent Profiles & Connections**: Linked `AgentProfile` records tracking license numbers, agency names, years of experience, ratings, and total sales, integrated directly into listing detail cards.
 
 ### 📊 Live Platform Metrics
+
 - **Real-Time Database Statistics**: Hero counters and platform statistics dynamically aggregated from PostgreSQL (total listings, active agents, covered cities, and average pricing).
 - **Newsletter Subscription**: Email capture pipeline with deduplication and upsert handling.
 
@@ -89,35 +93,38 @@ The database schema ([schema.prisma](file:///c:/Users/somet/Downloads/Coding/Dwe
 Base API URL: `http://localhost:5001/api`
 
 ### Authentication & Users
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Public | Register new seeker or agent account |
-| `POST` | `/api/auth/login` | Public | Authenticate user and receive JWT token |
-| `GET` | `/api/auth/me` | Authenticated | Validate session and retrieve profile |
-| `GET` | `/api/users/me` | Authenticated | Retrieve authenticated user profile |
-| `PUT` | `/api/users/me` | Authenticated | Update personal profile details |
-| `PATCH`| `/api/users/:id/role` | Admin Only | Assign or modify a user's account role |
+
+| Method  | Endpoint              | Access        | Description                             |
+| :------ | :-------------------- | :------------ | :-------------------------------------- |
+| `POST`  | `/api/auth/register`  | Public        | Register new seeker or agent account    |
+| `POST`  | `/api/auth/login`     | Public        | Authenticate user and receive JWT token |
+| `GET`   | `/api/auth/me`        | Authenticated | Validate session and retrieve profile   |
+| `GET`   | `/api/users/me`       | Authenticated | Retrieve authenticated user profile     |
+| `PUT`   | `/api/users/me`       | Authenticated | Update personal profile details         |
+| `PATCH` | `/api/users/:id/role` | Admin Only    | Assign or modify a user's account role  |
 
 ### Properties & Stats
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/properties` | Public | Search properties with filters & pagination |
-| `GET` | `/api/properties/:id` | Public | Fetch detailed property by ID with relations |
-| `GET` | `/api/properties/featured` | Public | Fetch top featured listings |
-| `GET` | `/api/properties/stats` | Public | Aggregate platform property statistics |
-| `GET` | `/api/stats` | Public | Canonical alias for `/api/properties/stats` |
-| `POST` | `/api/properties` | Agent / Admin | Create a new property listing |
-| `POST` | `/api/tours` | Authenticated | Schedule in-person or virtual walkthrough visit |
-| `POST` | `/api/favorites/:propertyId/toggle` | Authenticated | Toggle saved property bookmark status |
-| `POST` | `/api/properties/:id/reviews` | Authenticated | Submit property rating & review |
-| `POST` | `/api/newsletter` | Public | Subscribe email to newsletter updates |
-| `GET` | `/api/health` | Public | Server healthcheck probe |
+
+| Method | Endpoint                            | Access        | Description                                     |
+| :----- | :---------------------------------- | :------------ | :---------------------------------------------- |
+| `GET`  | `/api/properties`                   | Public        | Search properties with filters & pagination     |
+| `GET`  | `/api/properties/:id`               | Public        | Fetch detailed property by ID with relations    |
+| `GET`  | `/api/properties/featured`          | Public        | Fetch top featured listings                     |
+| `GET`  | `/api/properties/stats`             | Public        | Aggregate platform property statistics          |
+| `GET`  | `/api/stats`                        | Public        | Canonical alias for `/api/properties/stats`     |
+| `POST` | `/api/properties`                   | Agent / Admin | Create a new property listing                   |
+| `POST` | `/api/tours`                        | Authenticated | Schedule in-person or virtual walkthrough visit |
+| `POST` | `/api/favorites/:propertyId/toggle` | Authenticated | Toggle saved property bookmark status           |
+| `POST` | `/api/properties/:id/reviews`       | Authenticated | Submit property rating & review                 |
+| `POST` | `/api/newsletter`                   | Public        | Subscribe email to newsletter updates           |
+| `GET`  | `/api/health`                       | Public        | Server healthcheck probe                        |
 
 ---
 
 ## 🛠️ Local Development Setup
 
 ### Prerequisites
+
 - **Node.js**: `v20.x` or higher
 - **npm** or **pnpm**
 - **Python 3** (for serving the static frontend) or any local HTTP server
@@ -126,6 +133,7 @@ Base API URL: `http://localhost:5001/api`
 ---
 
 ### Step 1: Clone the Repository
+
 ```bash
 git clone https://github.com/mohammadamour/Dwelling.git
 cd Dwelling
@@ -167,7 +175,9 @@ ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:5500,http://localhost:550
 ---
 
 ### Step 3: Install Backend Dependencies
+
 From the `server/` directory:
+
 ```bash
 npm install
 ```
@@ -193,6 +203,7 @@ npm run db:seed
 ```
 
 #### Pre-Configured Test Credentials (after seeding):
+
 - **Home Seeker:** `testuser1@example.com` / `password123`
 - **Home Seeker:** `testuser2@example.com` / `password123`
 - **Listing Agent:** `testagent@example.com` / `password123`
@@ -206,6 +217,7 @@ npm run dev
 ```
 
 The API server will boot on `http://localhost:5001`:
+
 ```text
 ✅ Connected to Supabase PostgreSQL via Prisma
 🚀 Dwelling API running on http://localhost:5001
@@ -221,16 +233,18 @@ The API server will boot on `http://localhost:5001`:
 Open a **second terminal window** in the project root. Because modern browsers restrict native ES6 JavaScript modules over the `file://` protocol, serve the `FrontEnd/` directory over HTTP:
 
 **Using Python:**
+
 ```bash
 python -m http.server 5500 --directory FrontEnd
 ```
 
 **Using npx (Node):**
+
 ```bash
 npx serve FrontEnd -l 5500
 ```
 
-*(Or use the **VS Code / Cursor Live Server** extension on `FrontEnd/index.html`).*
+_(Or use the **VS Code / Cursor Live Server** extension on `FrontEnd/index.html`)._
 
 Open your browser and navigate to:
 👉 **[http://localhost:5500](http://localhost:5500)**
@@ -314,3 +328,46 @@ Dwelling/
 ## 📄 License
 
 This project is licensed under the [ISC License](LICENSE).
+
+Pre-Flight Setup
+Terminal 1: cd server && npm run dev (running on http://localhost:5001)
+Terminal 2: python -m http.server 5500 --directory FrontEnd (open http://localhost:5500)
+DevTools: Open F12 with Console and Network tabs visible.
+Phase Testing Objective Key Action & What to Verify
+
+Phase 1: Auth & Access Control Demo login, form validation & security • Click "Demo Agent" / "Demo Client" on login.html; verify 1-click fill and login.
+• Test open redirect: visit login.html?redirect=https://evil.com -> confirm it falls back safely to ../index.html.
+• Test rate limiting: fail login 16 times -> verify 429 Too Many Requests.
+• Access guard: visit add-property.html while logged out -> verify redirect to login.
+
+Phase 2: Homepage Experience Hero counters & quick search • Verify animated stat counters count up smoothly from live database values.
+• Submit hero search with type ("House") + city -> verify redirect to catalog with pre-filtered state.
+
+Phase 3: Catalog & Search Live filtering, debouncing & sorting • Type in search box -> verify debounced query execution in DevTools Network tab.
+• Combine filters (Type, Price, Beds, Baths) -> confirm live card updates and matching count.
+• Test sort dropdowns (Price Low/High, Newest) and pagination navigation.
+• Type nonexistentcity999 -> verify friendly empty state and "Reset Filters" action.
+
+Phase 4: Property Details Responsive grid & photo gallery • Desktop view (>= 1024px): confirm left column (gallery/specs) vs right sidebar (agent/price cards).
+• Click gallery thumbnails & navigation arrows -> confirm smooth hero image switching.
+
+Phase 5: Agent Inquiry Drawer Interactive messaging state machine • Click "Message Agent" on agent card -> verify inline textarea expands.
+• Type message -> verify live character counter (0/300).
+• Click "Send Inquiry" -> verify 800ms loading spinner ("Sending...") and green success confirmation badge.
+
+Phase 6: Reviews & Ratings Star picker & duplicate prevention • View review cards -> confirm author, stars, formatted date, text wrapping, and initials avatar fallback.
+• Log in as client, select 5 stars, submit review -> confirm it appears immediately.
+• Submit a second review for the same property -> verify database unique constraint blocks duplicates.
+
+Phase 7: Saved Favorites Bookmark persistence • Click heart while logged out -> verify prompt to log in.
+• Click heart while logged in -> verify heart turns red and state persists across reloads.
+• Open profile.html -> "Saved Properties" tab -> confirm listing appears and unfavorite works.
+
+Phase 8: Tour Scheduling Booking modal & dashboard • Click "Schedule a Tour" -> choose In-Person/Virtual, date & time, submit.
+• Navigate to profile.html -> "My Tours" tab -> verify scheduled visit card with "REQUESTED" status.
+
+Phase 9: Agent Listing Creation Listing publish workflow • Log in as testagent@example.com -> visit add-property.html.
+• Fill in property specs and image URLs -> submit -> verify redirect to new listing details page and homepage counter increment.
+
+Phase 10: Responsiveness & Cleanliness Mobile drawer & console health • Toggle DevTools Mobile Device view (Ctrl+Shift+M) -> verify hamburger drawer menu and single-column layout.
+• Check DevTools Console across all views: confirm 0 unhandled JavaScript exceptions and 0 broken 404 asset requests.
