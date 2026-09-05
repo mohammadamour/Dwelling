@@ -5,6 +5,7 @@ import { PrismaClient, Role } from '@prisma/client';
 import { AuthRequest, authenticate } from '../middleware/auth';
 import { JWT_SECRET } from '../config/env';
 import { getUserProfile } from '../controllers/userController';
+import { authLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-
  * POST /api/auth/register
  * Register a new user account with role sanitization and security checks.
  */
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password, name, phone, role, isAdmin } = req.body || {};
 
@@ -131,7 +132,7 @@ router.post('/register', async (req: Request, res: Response) => {
  * POST /api/auth/login
  * Authenticate existing user with email and password.
  */
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body || {};
 

@@ -11,9 +11,13 @@ import userRoutes = require('./routes/userRoutes');
 import favoriteRoutes = require('./routes/favoriteRoutes');
 import tourRoutes = require('./routes/tourRoutes');
 import agentRoutes = require('./routes/agentRoutes');
+import { generalApiLimiter, newsletterLimiter } from './middleware/rateLimiter';
 
 const prisma = new PrismaClient();
 const app = express();
+
+// Trust reverse proxy hops (required for Render.com and express-rate-limit client IP resolution)
+app.set('trust proxy', 1);
 
 // Security: Dynamic CORS configuration based on environment variables
 const allowedOrigins = getAllowedOrigins();
@@ -53,6 +57,9 @@ app.get('/', (_req, res) => {
   res.json({ status: 'ok', message: 'Dwelling API is running' });
 });
 
+// API Rate Limiting: General blanket protection for all /api endpoints
+app.use('/api', generalApiLimiter);
+
 // API Routes
 app.use('/api/auth', authRoutes as express.Router);
 app.use('/api/users', userRoutes as express.Router);
@@ -64,9 +71,9 @@ app.use('/api', statsRoutes as express.Router);
 
 /**
  * POST /api/newsletter
- * Subscribe an email to the newsletter list
+ * Subscribe an email to the newsletter list (throttled by newsletterLimiter)
  */
-app.post('/api/newsletter', async (req, res) => {
+app.post('/api/newsletter', newsletterLimiter, async (req, res) => {
   try {
     const { email, sourcePage } = req.body || {};
     if (!email || typeof email !== 'string' || !email.includes('@')) {
