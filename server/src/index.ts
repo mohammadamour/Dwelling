@@ -1,5 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
+import fs = require('fs');
+import path = require('path');
 import express = require('express');
 import cors = require('cors');
 import helmet from 'helmet';
@@ -102,6 +104,38 @@ app.post('/api/newsletter', newsletterLimiter, async (req, res) => {
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Dwelling API is running' });
 });
+
+// Optional Single-Service Deployment (Option B):
+// When SERVE_FRONTEND is set to 'true', Express serves the static frontend directly with clean URLs
+if (process.env.SERVE_FRONTEND === 'true') {
+  const candidatePaths = [
+    path.resolve(__dirname, '../../FrontEnd'),
+    path.resolve(__dirname, '../../../FrontEnd'),
+    path.resolve(process.cwd(), '../FrontEnd'),
+    path.resolve(process.cwd(), 'FrontEnd'),
+  ];
+  const frontEndPath = candidatePaths.find((p) => fs.existsSync(p));
+  if (frontEndPath) {
+    app.use(express.static(frontEndPath));
+
+    app.get('/pages/:page', (req, res, next) => {
+      const pageFile = path.join(frontEndPath, 'pages', `${req.params.page}.html`);
+      if (fs.existsSync(pageFile)) {
+        return res.sendFile(pageFile);
+      }
+      next();
+    });
+
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      const indexFile = path.join(frontEndPath, 'index.html');
+      if (fs.existsSync(indexFile)) {
+        return res.sendFile(indexFile);
+      }
+      next();
+    });
+  }
+}
 
 // 404 handler
 app.use((_req, res) => {

@@ -1,0 +1,66 @@
+# =============================================================================
+# Dwelling — Render.com Blueprint Infrastructure as Code
+# Deploys the decoupled Full-Stack Architecture:
+# 1. Web Service: Node.js / Express API with Prisma & Supabase PostgreSQL
+# 2. Static Site: Vanilla HTML/CSS/JS Multi-Page Application with API Proxy
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. API Backend Web Service
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: dwelling-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard: Supabase PgBouncer pooler (port 6543) with ?pgbouncer=true
+      - key: DIRECT_URL
+        sync: false # Set in Render Dashboard: Supabase session direct pooler (port 5432)
+      - key: JWT_SECRET
+        generateValue: true # Render will automatically generate a secure random string
+      - key: ALLOWED_ORIGINS
+        fromService:
+          type: static
+          name: dwelling-frontend
+          property: url
+
+  # ---------------------------------------------------------------------------
+  # 2. Frontend Static Site
+  # ---------------------------------------------------------------------------
+  - type: static
+    name: dwelling-frontend
+    plan: free
+    rootDir: FrontEnd
+    publishPath: .
+    routes:
+      # Reverse proxy /api calls to the backend API service (eliminates CORS and relative 404s)
+      - type: rewrite
+        source: /api/*
+        destination: https://dwelling-api.onrender.com/api/*
+      # Clean URL rewrites for subpages (e.g. /pages/login -> /pages/login.html)
+      - type: rewrite
+        source: /pages/login
+        destination: /pages/login.html
+      - type: rewrite
+        source: /pages/register
+        destination: /pages/register.html
+      - type: rewrite
+        source: /pages/properties
+        destination: /pages/properties.html
+      - type: rewrite
+        source: /pages/property-details
+        destination: /pages/property-details.html
+      - type: rewrite
+        source: /pages/profile
+        destination: /pages/profile.html
+      - type: rewrite
+        source: /pages/add-property
+        destination: /pages/add-property.html

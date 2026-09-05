@@ -1,0 +1,25 @@
+# =============================================================================
+# Dwelling Frontend — Static Hosting Routing & Proxy Configuration
+# Compatible with Render.com Static Sites, Netlify, and Cloudflare Pages
+# =============================================================================
+
+# 1. API Reverse Proxy Rewrite
+# Forwards relative /api calls from the static frontend to the Render backend service.
+# Eliminates 404 errors on relative /api calls and avoids CORS preflight overhead.
+/api/*  https://dwelling-api.onrender.com/api/:splat  200!
+
+# 2. Multi-Page Clean URL Rewrites (allows visiting routes without explicit .html)
+/login                  /pages/login.html                  200
+/register               /pages/register.html               200
+/properties             /pages/properties.html             200
+/property-details       /pages/property-details.html       200
+/profile                /pages/profile.html                200
+/add-property           /pages/add-property.html           200
+
+# 3. Pages Subdirectory Clean URL Rewrites
+/pages/login            /pages/login.html                  200
+/pages/register         /pages/register.html               200
+/pages/properties       /pages/properties.html             200
+/pages/property-details /pages/property-details.html       200
+/pages/profile          /pages/profile.html                200
+/pages/add-property     /pages/add-property.html           200
