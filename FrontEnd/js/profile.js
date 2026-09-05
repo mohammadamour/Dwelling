@@ -1,6 +1,7 @@
 /**
  * Dwelling — Profile Page JavaScript
- * User profile management, scheduled tour appointments, and saved favorites.
+ * User profile management, scheduled tour appointments, saved favorites,
+ * and (for agents) managed property listings with edit/delete controls.
  */
 
 import {
@@ -8,21 +9,24 @@ import {
   updateUserProfile,
   logoutUser,
   isAuthenticated,
+  getAuthUser,
   fetchMyTours,
   fetchMyFavorites,
+  fetchMyListings,
+  deleteProperty,
   updateTourStatus,
   toggleFavorite,
 } from './api.js';
 import { $, $$, fmtCurrency } from './shared.js';
 
-// Load user profile
+// ─── Profile loader ───────────────────────────────────────────────────────────
+
 async function loadUserProfile() {
   const loadingState = $('#loadingState');
   const notAuthState = $('#notAuthState');
-  const errorState = $('#errorState');
+  const errorState   = $('#errorState');
   const profileContent = $('#profileContent');
 
-  // Check authentication
   if (!isAuthenticated()) {
     if (loadingState) loadingState.hidden = true;
     if (notAuthState) notAuthState.hidden = false;
@@ -41,27 +45,25 @@ async function loadUserProfile() {
 
     if (profileContent) profileContent.hidden = false;
 
-    // Update page title
     document.title = `My Profile — Dwelling`;
 
-    // Update profile card
-    const profileAvatar = $('#profileAvatar');
-    const profileName = $('#profileName');
-    const profileEmail = $('#profileEmail');
-    const profileRole = $('#profileRole');
-    const statFavorites = $('#statFavorites');
-    const statReviews = $('#statReviews');
-    const statJoined = $('#statJoined');
+    const profileAvatar  = $('#profileAvatar');
+    const profileName    = $('#profileName');
+    const profileEmail   = $('#profileEmail');
+    const profileRole    = $('#profileRole');
+    const statFavorites  = $('#statFavorites');
+    const statReviews    = $('#statReviews');
+    const statJoined     = $('#statJoined');
 
     if (profileAvatar) {
       profileAvatar.src = user.avatarUrl || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22/%3E';
     }
-    if (profileName) profileName.textContent = user.name || 'User';
+    if (profileName)  profileName.textContent  = user.name  || 'User';
     if (profileEmail) profileEmail.textContent = user.email || '';
-    if (profileRole) profileRole.textContent = user.role === 'AGENT' ? 'Agent' : 'Home Seeker';
+    if (profileRole)  profileRole.textContent  = user.role === 'AGENT' ? 'Agent' : (user.role === 'ADMIN' ? 'Admin' : 'Home Seeker');
 
     if (statFavorites) statFavorites.textContent = user._count?.favorites || 0;
-    if (statReviews) statReviews.textContent = user._count?.reviews || 0;
+    if (statReviews)   statReviews.textContent   = user._count?.reviews   || 0;
     if (statJoined) {
       const joinedDate = user.createdAt
         ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -70,23 +72,25 @@ async function loadUserProfile() {
     }
 
     // Populate form
-    const nameInput = $('#name');
-    const emailInput = $('#email');
-    const phoneInput = $('#phone');
+    const setVal = (id, val) => { const el = $(`#${id}`); if (el) el.value = val || ''; };
+    setVal('name', user.name);
+    setVal('email', user.email);
+    setVal('phone', user.phone);
+    setVal('bio', user.bio);
+    setVal('avatarUrl', user.avatarUrl);
     const roleSelect = $('#role');
-    const bioTextarea = $('#bio');
-    const avatarUrlInput = $('#avatarUrl');
-
-    if (nameInput) nameInput.value = user.name || '';
-    if (emailInput) emailInput.value = user.email || '';
-    if (phoneInput) phoneInput.value = user.phone || '';
     if (roleSelect) roleSelect.value = user.role || 'SEEKER';
-    if (bioTextarea) bioTextarea.value = user.bio || '';
-    if (avatarUrlInput) avatarUrlInput.value = user.avatarUrl || '';
 
-    // Load scheduled tours and saved properties
+    // Load data sections
     loadUserTours();
     loadUserFavorites();
+
+    // Agent-only: show listings section
+    if (user.role === 'AGENT' || user.role === 'ADMIN') {
+      const listingsSection = $('#myListingsSection');
+      if (listingsSection) listingsSection.hidden = false;
+      loadUserListings();
+    }
 
   } catch (error) {
     console.error('Failed to load user profile:', error);
@@ -95,9 +99,10 @@ async function loadUserProfile() {
   }
 }
 
-// Load and render scheduled tours
+// ─── Scheduled tours ──────────────────────────────────────────────────────────
+
 async function loadUserTours() {
-  const toursList = $('#myToursList');
+  const toursList  = $('#myToursList');
   const countBadge = $('#toursCountBadge');
   if (!toursList) return;
 
@@ -112,27 +117,18 @@ async function loadUserTours() {
     }
 
     toursList.innerHTML = tours.map((tour) => {
-      const tourDate = new Date(tour.tourDate);
-      const formattedDate = tourDate.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-      const formattedTime = tourDate.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      const tourDate      = new Date(tour.tourDate);
+      const formattedDate = tourDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const formattedTime = tourDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
       const statusColors = {
         REQUESTED: { bg: '#FEF3C7', text: '#92400E' },
-        CONFIRMED: { bg: '#D1FAE5', text: '#065F46' },
-        COMPLETED: { bg: '#DBEAFE', text: '#1E40AF' },
-        CANCELLED: { bg: '#F3F4F6', text: '#6B7280' },
+        CONFIRMED:  { bg: '#D1FAE5', text: '#065F46' },
+        COMPLETED:  { bg: '#DBEAFE', text: '#1E40AF' },
+        CANCELLED:  { bg: '#F3F4F6', text: '#6B7280' },
       };
-      const badge = statusColors[tour.status] || { bg: '#E2E8F0', text: '#334155' };
+      const badge  = statusColors[tour.status] || { bg: '#E2E8F0', text: '#334155' };
       const imgUrl = tour.property?.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
-
       const canCancel = tour.status === 'REQUESTED' || tour.status === 'CONFIRMED';
 
       return `
@@ -176,17 +172,18 @@ async function loadUserTours() {
   }
 }
 
-// Load and render user favorites
+// ─── Saved favorites ──────────────────────────────────────────────────────────
+
 async function loadUserFavorites() {
-  const favList = $('#myFavoritesList');
-  const countBadge = $('#favoritesCountBadge');
+  const favList       = $('#myFavoritesList');
+  const countBadge    = $('#favoritesCountBadge');
   const statFavorites = $('#statFavorites');
   if (!favList) return;
 
   try {
     const favorites = await fetchMyFavorites();
     const count = Array.isArray(favorites) ? favorites.length : 0;
-    if (countBadge) countBadge.textContent = `${count} Saved`;
+    if (countBadge)    countBadge.textContent    = `${count} Saved`;
     if (statFavorites) statFavorites.textContent = count;
 
     if (!Array.isArray(favorites) || favorites.length === 0) {
@@ -195,7 +192,7 @@ async function loadUserFavorites() {
     }
 
     favList.innerHTML = favorites.map((p) => {
-      const imgUrl = p.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22160%22/%3E';
+      const imgUrl         = p.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22160%22/%3E';
       const formattedPrice = fmtCurrency(p.price) + (p.priceType === 'RENT' ? '/mo' : '');
 
       return `
@@ -218,7 +215,6 @@ async function loadUserFavorites() {
       `;
     }).join('');
 
-    // Wire remove buttons
     $$('.remove-fav-btn', favList).forEach((btn) => {
       btn.addEventListener('click', async () => {
         const propId = btn.getAttribute('data-id');
@@ -240,60 +236,169 @@ async function loadUserFavorites() {
   }
 }
 
-// Initialize profile form
+// ─── Agent listings ───────────────────────────────────────────────────────────
+
+const STATUS_BADGE = {
+  ACTIVE:   { bg: '#D1FAE5', text: '#065F46', label: 'Active'   },
+  PENDING:  { bg: '#FEF3C7', text: '#92400E', label: 'Pending'  },
+  SOLD:     { bg: '#DBEAFE', text: '#1E40AF', label: 'Sold'     },
+  RENTED:   { bg: '#EDE9FE', text: '#5B21B6', label: 'Rented'   },
+  INACTIVE: { bg: '#F3F4F6', text: '#6B7280', label: 'Inactive' },
+};
+
+async function loadUserListings() {
+  const list       = $('#myListingsList');
+  const countBadge = $('#listingsCountBadge');
+  if (!list) return;
+
+  try {
+    const response = await fetchMyListings();
+    const listings = response?.data ?? [];
+    const count    = listings.length;
+
+    if (countBadge) countBadge.textContent = `${count} Listing${count === 1 ? '' : 's'}`;
+
+    if (count === 0) {
+      list.innerHTML = `
+        <div style="text-align: center; padding: var(--s-8) 0; color: var(--c-muted);">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto var(--s-3); display: block; opacity: 0.4;">
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <p style="font-size: var(--text-sm); margin-bottom: var(--s-4);">You haven't listed any properties yet.</p>
+          <a href="add-property.html" class="btn btn--primary btn--sm">+ Create Your First Listing</a>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = listings.map((p) => {
+      const imgUrl         = p.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
+      const formattedPrice = fmtCurrency(p.price) + (p.priceType === 'RENT' ? '/mo' : '');
+      const statusKey      = p.status || 'ACTIVE';
+      const badge          = STATUS_BADGE[statusKey] || STATUS_BADGE.ACTIVE;
+      const createdAt      = new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      return `
+        <div class="listing-mgmt-card" data-listing-id="${p.id}"
+             style="display: flex; align-items: flex-start; gap: var(--s-4); padding: var(--s-4);
+                    background: var(--c-bg); border-radius: var(--radius-lg);
+                    border: 1px solid var(--c-border); flex-wrap: wrap;">
+
+          <!-- Thumbnail -->
+          <a href="property-details.html?id=${p.id}" style="flex-shrink: 0;">
+            <img src="${imgUrl}" alt="${p.title}"
+                 style="width: 100px; height: 72px; object-fit: cover; border-radius: var(--radius-md);"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2272%22/%3E'" />
+          </a>
+
+          <!-- Info -->
+          <div style="flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; margin-bottom: 4px;">
+              <a href="property-details.html?id=${p.id}"
+                 style="font-weight: 700; font-size: var(--text-base); color: var(--c-text); text-decoration: none;">${p.title}</a>
+              <span style="font-size: var(--text-xs); font-weight: 700; padding: 2px 8px; border-radius: 9999px;
+                           background: ${badge.bg}; color: ${badge.text};">${badge.label}</span>
+            </div>
+            <p style="font-size: var(--text-sm); font-weight: 700; color: var(--c-primary); margin: 0 0 2px;">${formattedPrice}</p>
+            <p style="font-size: var(--text-xs); color: var(--c-muted); margin: 0;">
+              📍 ${p.city || 'Unknown'}, ${p.state || ''} &nbsp;·&nbsp;
+              🛏 ${p.beds} bed &nbsp;·&nbsp; 🚿 ${p.baths} bath &nbsp;·&nbsp;
+              Listed ${createdAt}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; gap: var(--s-2); align-items: center; flex-shrink: 0; flex-wrap: wrap;">
+            <a href="add-property.html?edit=${p.id}"
+               class="btn btn--outline btn--sm"
+               style="font-size: var(--text-xs); padding: 5px 12px; display: inline-flex; align-items: center; gap: 4px;">
+              ✏️ Edit
+            </a>
+            <button type="button"
+                    class="btn btn--sm delete-listing-btn"
+                    data-id="${p.id}"
+                    data-title="${p.title.replace(/"/g, '&quot;')}"
+                    style="font-size: var(--text-xs); padding: 5px 12px; background: transparent;
+                           color: #EF4444; border: 1px solid #FECACA; border-radius: var(--radius-md);
+                           cursor: pointer;">
+              🗑 Delete
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Wire delete buttons
+    $$('.delete-listing-btn', list).forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const propId    = btn.getAttribute('data-id');
+        const propTitle = btn.getAttribute('data-title') || 'this listing';
+        if (!confirm(`Are you sure you want to permanently delete "${propTitle}"?\n\nThis will remove all associated tours, favorites, and reviews. This action cannot be undone.`)) return;
+
+        const card = btn.closest('.listing-mgmt-card');
+        try {
+          btn.disabled = true;
+          btn.textContent = 'Deleting…';
+
+          // Optimistic removal with fade
+          if (card) { card.style.transition = 'opacity 0.3s'; card.style.opacity = '0.4'; }
+
+          await deleteProperty(propId);
+          loadUserListings(); // re-render
+        } catch (err) {
+          console.error('Delete failed:', err);
+          if (card) card.style.opacity = '1';
+          alert('Failed to delete listing: ' + (err.message || 'Unknown error'));
+          btn.disabled = false;
+          btn.textContent = '🗑 Delete';
+        }
+      });
+    });
+
+  } catch (error) {
+    console.error('Failed to load listings:', error);
+    list.innerHTML = '<p style="color: var(--c-muted); font-size: var(--text-sm);">Failed to load your listings. Please try again.</p>';
+  }
+}
+
+// ─── Profile form ─────────────────────────────────────────────────────────────
+
 function initProfileForm() {
-  const form = $('#profileForm');
+  const form        = $('#profileForm');
   const formMessage = $('#formMessage');
-  const cancelBtn = $('#cancelBtn');
+  const cancelBtn   = $('#cancelBtn');
 
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const submitBtn = form.querySelector('button[type="submit"]');
+    const submitBtn   = form.querySelector('button[type="submit"]');
     const originalText = submitBtn ? submitBtn.textContent : 'Save Changes';
 
     try {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
-      }
-
-      if (formMessage) {
-        formMessage.hidden = true;
-        formMessage.className = 'profile-form__message';
-      }
-
-      const name = $('#name')?.value?.trim();
-      const email = $('#email')?.value?.trim();
-      const phone = $('#phone')?.value?.trim();
-      const bio = $('#bio')?.value?.trim();
-      const avatarUrl = $('#avatarUrl')?.value?.trim();
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+      if (formMessage) { formMessage.hidden = true; formMessage.className = 'profile-form__message'; }
 
       const profileData = {
-        name,
-        email,
-        phone,
-        bio,
-        avatarUrl,
+        name:      $('#name')?.value?.trim(),
+        email:     $('#email')?.value?.trim(),
+        phone:     $('#phone')?.value?.trim(),
+        bio:       $('#bio')?.value?.trim(),
+        avatarUrl: $('#avatarUrl')?.value?.trim(),
       };
 
       const updatedUser = await updateUserProfile(profileData);
 
-      // Update displayed elements
       const profileAvatar = $('#profileAvatar');
-      const profileName = $('#profileName');
-      const profileEmail = $('#profileEmail');
+      const profileName   = $('#profileName');
+      const profileEmail  = $('#profileEmail');
 
-      if (profileAvatar && profileData.avatarUrl) {
-        profileAvatar.src = profileData.avatarUrl;
-      }
-      if (profileName) profileName.textContent = profileData.name;
+      if (profileAvatar && profileData.avatarUrl) profileAvatar.src = profileData.avatarUrl;
+      if (profileName)  profileName.textContent  = profileData.name;
       if (profileEmail) profileEmail.textContent = profileData.email;
 
       if (formMessage) {
-        formMessage.hidden = false;
+        formMessage.hidden    = false;
         formMessage.className = 'profile-form__message profile-form__message--success';
         formMessage.textContent = 'Profile updated successfully!';
       }
@@ -301,26 +406,22 @@ function initProfileForm() {
     } catch (error) {
       console.error('Failed to update profile:', error);
       if (formMessage) {
-        formMessage.hidden = false;
+        formMessage.hidden    = false;
         formMessage.className = 'profile-form__message profile-form__message--error';
         formMessage.textContent = error.message || 'Failed to update profile. Please try again.';
       }
     } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalText; }
     }
   });
 
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => {
-      loadUserProfile();
-    });
+    cancelBtn.addEventListener('click', () => loadUserProfile());
   }
 }
 
-// Initialize logout button
+// ─── Logout ───────────────────────────────────────────────────────────────────
+
 function initLogoutButton() {
   const logoutBtn = $('#logoutBtn');
   if (!logoutBtn) return;
@@ -335,23 +436,23 @@ function initLogoutButton() {
   });
 }
 
-// Initialize retry button
+// ─── Retry button ─────────────────────────────────────────────────────────────
+
 function initRetryButton() {
   const retryBtn = $('#retryBtn');
   if (!retryBtn) return;
 
   retryBtn.addEventListener('click', () => {
-    const errorState = $('#errorState');
+    const errorState   = $('#errorState');
     const loadingState = $('#loadingState');
-
-    if (errorState) errorState.hidden = true;
+    if (errorState)   errorState.hidden   = true;
     if (loadingState) loadingState.hidden = false;
-
     loadUserProfile();
   });
 }
 
-// Initialize change avatar button
+// ─── Change avatar ────────────────────────────────────────────────────────────
+
 function initChangeAvatarButton() {
   const changeAvatarBtn = $('#changeAvatarBtn');
   if (!changeAvatarBtn) return;
@@ -365,7 +466,8 @@ function initChangeAvatarButton() {
   });
 }
 
-// Initialize profile page
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
+
 function initProfilePage() {
   loadUserProfile();
   initProfileForm();
@@ -374,7 +476,6 @@ function initProfilePage() {
   initChangeAvatarButton();
 }
 
-// Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initProfilePage);
 } else {

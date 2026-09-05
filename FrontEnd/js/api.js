@@ -365,6 +365,49 @@ export async function createProperty(propertyData) {
   return unwrapPayload(payload);
 }
 
+/**
+ * Update an existing property listing (ownership-enforced)
+ * @param {string} propertyId - The property ID to update
+ * @param {Object} propertyData - Fields to update
+ * @returns {Promise<Object>} Updated property data
+ */
+export async function updateProperty(propertyId, propertyData) {
+  const payload = await apiFetch(`/properties/${encodeURIComponent(propertyId)}`, {
+    method: 'PUT',
+    body: JSON.stringify(propertyData),
+  });
+  return unwrapPayload(payload);
+}
+
+/**
+ * Delete a property listing (ownership-enforced)
+ * @param {string} propertyId - The property ID to delete
+ * @returns {Promise<Object>} Deletion confirmation message
+ */
+export async function deleteProperty(propertyId) {
+  return apiFetch(`/properties/${encodeURIComponent(propertyId)}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Fetch all listings created by the authenticated agent
+ * @param {Object} [params] - Optional pagination { page, limit }
+ * @returns {Promise<Object>} Response with data array and meta pagination info
+ */
+export async function fetchMyListings(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.page) qs.append('page', params.page);
+  if (params.limit) qs.append('limit', params.limit);
+  const query = qs.toString();
+  const endpoint = query ? `/properties/my?${query}` : '/properties/my';
+  const payload = await apiFetch(endpoint);
+  if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    return payload;
+  }
+  return { data: normalizeApiPayload(payload) ?? [], meta: {} };
+}
+
 // Auth Services
 /**
  * Login user with credentials
@@ -622,6 +665,9 @@ const api = {
   fetchFeaturedProperties,
   fetchPropertyStats,
   createProperty,
+  updateProperty,
+  deleteProperty,
+  fetchMyListings,
   
   // Auth services
   loginUser,

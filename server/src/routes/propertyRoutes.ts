@@ -5,6 +5,9 @@ import {
   getPropertyStats,
   getFeaturedProperties,
   createProperty,
+  updateProperty,
+  deleteProperty,
+  getMyListings,
   bookPropertyTour,
   togglePropertyFavorite,
   createPropertyReview,
@@ -40,11 +43,29 @@ router.get('/stats', getPropertyStats);
 router.get('/featured', getFeaturedProperties);
 
 /**
+ * GET /api/properties/my
+ * Return all listings created by the authenticated agent
+ */
+router.get('/my', authenticate, requireRole(['AGENT', 'ADMIN']), getMyListings);
+
+/**
  * GET /api/properties/:id
  * Fetch a single property by its ID with related data (agent, images, reviews).
  * optionalAuth attaches user context so isFavorite is flagged for authenticated users.
  */
 router.get('/:id', optionalAuth, getPropertyById);
+
+/**
+ * PUT /api/properties/:id
+ * Update an existing listing — ownership-enforced (agent who created it, or ADMIN).
+ */
+router.put('/:id', authenticate, requireRole(['AGENT', 'ADMIN']), updateProperty);
+
+/**
+ * DELETE /api/properties/:id
+ * Delete a listing and all associated records — ownership-enforced (creator or ADMIN).
+ */
+router.delete('/:id', authenticate, requireRole(['AGENT', 'ADMIN']), deleteProperty);
 
 /**
  * POST /api/properties/:id/tours

@@ -521,6 +521,293 @@ export const createProperty = async (req: any, res: Response) => {
   }
 };
 
+export const updateProperty = async (req: any, res: Response) => {
+  try {
+    const agentId = req.user?.id;
+    const agentRole = req.user?.role;
+
+    if (!agentId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const rawId = req.params.id;
+    const propertyId: string = Array.isArray(rawId) ? rawId[0] || '' : rawId || '';
+
+    if (!propertyId) {
+      return res.status(400).json({ error: 'Property ID is required' });
+    }
+
+    // Fetch existing property for ownership check
+    const existing = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { id: true, agentId: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+
+    // Strict ownership: only the listing agent or an ADMIN can update
+    if (existing.agentId !== agentId && agentRole !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: You are not authorized to edit this listing' });
+    }
+
+    const {
+      title,
+      description,
+      price,
+      priceType,
+      beds,
+      baths,
+      sqft,
+      address,
+      city,
+      state,
+      zip,
+      type,
+      status,
+      images,
+    } = req.body;
+
+    // Build update payload — only include fields that are explicitly provided
+    const updateData: any = {};
+
+    if (title !== undefined) {
+      if (typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ error: 'Title must be a non-empty string' });
+      }
+      updateData.title = title.trim();
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== 'string' || !description.trim()) {
+        return res.status(400).json({ error: 'Description must be a non-empty string' });
+      }
+      updateData.description = description.trim();
+    }
+
+    if (price !== undefined) {
+      const numPrice = Number(price);
+      if (isNaN(numPrice) || numPrice <= 0) {
+        return res.status(400).json({ error: 'Price must be a valid positive number' });
+      }
+      updateData.price = numPrice;
+    }
+
+    if (priceType !== undefined) {
+      if (priceType !== 'RENT' && priceType !== 'SALE') {
+        return res.status(400).json({ error: 'PriceType must be RENT or SALE' });
+      }
+      updateData.priceType = priceType;
+    }
+
+    if (beds !== undefined) {
+      const rawBeds = Number(beds);
+      if (isNaN(rawBeds) || rawBeds < 0) {
+        return res.status(400).json({ error: 'Beds must be a non-negative number' });
+      }
+      updateData.beds = Math.max(0, Math.round(rawBeds));
+    }
+
+    if (baths !== undefined) {
+      const rawBaths = Number(baths);
+      if (isNaN(rawBaths) || rawBaths < 0) {
+        return res.status(400).json({ error: 'Baths must be a non-negative number' });
+      }
+      updateData.baths = Math.max(0, Math.round(rawBaths));
+    }
+
+    if (sqft !== undefined) {
+      const rawSqft = Number(sqft);
+      if (isNaN(rawSqft) || rawSqft <= 0) {
+        return res.status(400).json({ error: 'Sqft must be a positive number' });
+      }
+      updateData.sqft = Math.max(1, Math.round(rawSqft));
+    }
+
+    if (address !== undefined) {
+      if (typeof address !== 'string' || !address.trim()) {
+        return res.status(400).json({ error: 'Address must be a non-empty string' });
+      }
+      updateData.address = address.trim();
+    }
+
+    if (city !== undefined) {
+      if (typeof city !== 'string' || !city.trim()) {
+        return res.status(400).json({ error: 'City must be a non-empty string' });
+      }
+      updateData.city = city.trim();
+    }
+
+    if (state !== undefined) {
+      if (typeof state !== 'string' || !state.trim()) {
+        return res.status(400).json({ error: 'State must be a non-empty string' });
+      }
+      updateData.state = state.trim();
+    }
+
+    if (zip !== undefined) {
+      if (typeof zip !== 'string' || !zip.trim()) {
+        return res.status(400).json({ error: 'Zip must be a non-empty string' });
+      }
+      updateData.zip = zip.trim();
+    }
+
+    if (type !== undefined) {
+      const validTypes = ['HOUSE', 'APT', 'CONDO', 'TOWNHOUSE'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: 'Type must be HOUSE, APT, CONDO, or TOWNHOUSE' });
+      }
+      updateData.type = type;
+    }
+
+    if (status !== undefined) {
+      const validStatuses = ['ACTIVE', 'PENDING', 'SOLD', 'RENTED', 'INACTIVE'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+      }
+      updateData.status = status;
+    }
+
+    // Handle image update: replace all images atomically
+    let imageUpdateOps: any = undefined;
+    if (Array.isArray(images)) {
+      const imageList: string[] = images
+        .map((img: any) => {
+          if (typeof img === 'string') return img.trim();
+          if (img && typeof img === 'object' && typeof img.url === 'string') return img.url.trim();
+          return '';
+        })
+        .filter((url: string) => url.length > 0);
+
+      if (imageList.length > 0) {
+        const newTitle = updateData.title || existing.agentId; // fallback label
+        imageUpdateOps = {
+          deleteMany: {},
+          create: imageList.map((url: string, idx: number) => ({
+            url,
+            altText: `${(updateData.title || 'Property')} - Image ${idx + 1}`,
+            sortOrder: idx,
+            isPrimary: idx === 0,
+          })),
+        };
+      }
+    }
+
+    const updated = await prisma.property.update({
+      where: { id: propertyId },
+      data: {
+        ...updateData,
+        ...(imageUpdateOps ? { images: imageUpdateOps } : {}),
+      },
+      include: {
+        images: { orderBy: { sortOrder: 'asc' } },
+        agent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    res.json({ data: updated, property: updated });
+  } catch (error: any) {
+    console.error('PUT /api/properties/:id error:', error);
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    res.status(500).json({ error: 'Failed to update property listing' });
+  }
+};
+
+export const deleteProperty = async (req: any, res: Response) => {
+  try {
+    const agentId = req.user?.id;
+    const agentRole = req.user?.role;
+
+    if (!agentId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const rawId = req.params.id;
+    const propertyId: string = Array.isArray(rawId) ? rawId[0] || '' : rawId || '';
+
+    if (!propertyId) {
+      return res.status(400).json({ error: 'Property ID is required' });
+    }
+
+    // Fetch existing property for ownership check
+    const existing = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { id: true, agentId: true, title: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+
+    // Strict ownership: only the listing agent or an ADMIN may delete
+    if (existing.agentId !== agentId && agentRole !== 'ADMIN') {
+      return res.status(403).json({ error: 'Forbidden: You are not authorized to delete this listing' });
+    }
+
+    // Cascade-delete dependent records to avoid FK constraint violations, then remove the property
+    await prisma.$transaction([
+      prisma.review.deleteMany({ where: { propertyId } }),
+      prisma.favorite.deleteMany({ where: { propertyId } }),
+      prisma.tourBooking.deleteMany({ where: { propertyId } }),
+      prisma.propertyImage.deleteMany({ where: { propertyId } }),
+      prisma.property.delete({ where: { id: propertyId } }),
+    ]);
+
+    res.json({ message: `Property "${existing.title}" has been deleted successfully` });
+  } catch (error: any) {
+    console.error('DELETE /api/properties/:id error:', error);
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+    res.status(500).json({ error: 'Failed to delete property listing' });
+  }
+};
+
+export const getMyListings = async (req: any, res: Response) => {
+  try {
+    const agentId = req.user?.id;
+
+    if (!agentId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page as string || '1', 10));
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string || '20', 10)), 100);
+    const skip = (page - 1) * limit;
+
+    const [listings, total] = await Promise.all([
+      prisma.property.findMany({
+        where: { agentId },
+        select: PROPERTY_CARD_SELECT,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip,
+      }),
+      prisma.property.count({ where: { agentId } }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({
+      data: listings,
+      meta: { total, page, limit, totalPages },
+    });
+  } catch (error) {
+    console.error('GET /api/properties/my error:', error);
+    res.status(500).json({ error: 'Failed to fetch your listings' });
+  }
+};
+
 // Re-export core entity controllers
 export { createTourBooking as bookPropertyTour } from './tourController';
 export { toggleFavorite as togglePropertyFavorite, addFavorite, removeFavorite } from './favoriteController';
