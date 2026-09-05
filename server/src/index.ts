@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import express = require('express');
 import cors = require('cors');
+import helmet from 'helmet';
 import { PrismaClient } from '@prisma/client';
 import { getAllowedOrigins, PORT, NODE_ENV } from './config/env';
 import propertyRoutes = require('./routes/propertyRoutes');
@@ -18,6 +19,12 @@ const app = express();
 
 // Trust reverse proxy hops (required for Render.com and express-rate-limit client IP resolution)
 app.set('trust proxy', 1);
+
+// Security Headers: Comprehensive HTTP header hardening via Helmet
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  frameguard: { action: 'deny' },
+}));
 
 // Security: Dynamic CORS configuration based on environment variables
 const allowedOrigins = getAllowedOrigins();
