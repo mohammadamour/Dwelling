@@ -22,7 +22,7 @@ export const DWELLING_CONFIG = {
    * set it here. If Render assigns a customized suffix (e.g. dwelling-api-abc.onrender.com),
    * update this URL accordingly.
    */
-  productionApiUrl: 'https://dwelling-api.onrender.com/api',
+  productionApiUrl: 'https://dwelling-84mu.onrender.com/api',
 
   /**
    * Local development API base URL fallback.
