@@ -101,8 +101,10 @@ app.get('/api/health', (_req, res) => {
 
 // Frontend Static & Page Route Handling
 const candidatePaths = [
-  path.resolve(__dirname, '../../../FrontEnd'),
+  path.resolve(__dirname, '../FrontEnd'),
   path.resolve(__dirname, '../../FrontEnd'),
+  path.resolve(__dirname, '../../../FrontEnd'),
+  path.resolve(process.cwd(), 'dist/FrontEnd'),
   path.resolve(process.cwd(), '../FrontEnd'),
   path.resolve(process.cwd(), 'FrontEnd'),
 ];
