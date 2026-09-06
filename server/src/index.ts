@@ -142,7 +142,7 @@ if (frontEndPath) {
   });
 
   // Fallback for non-API routes: serve index.html
-  app.get('*', (req, res, next) => {
+  app.get('(.*)', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
     res.sendFile(path.join(frontEndPath, 'index.html'));
   });
