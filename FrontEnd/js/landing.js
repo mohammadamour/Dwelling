@@ -308,30 +308,12 @@ function initNewsletter() {
   });
 }
 
-// Video play button
-function initVideoButton() {
-  const videoPlayBtn = $('.video-block__play');
-  if (videoPlayBtn) {
-    videoPlayBtn.addEventListener('click', () => {
-      videoPlayBtn.animate(
-        [
-          { transform: 'translate(-50%, -50%) scale(1)' },
-          { transform: 'translate(-50%, -50%) scale(0.92)' },
-          { transform: 'translate(-50%, -50%) scale(1)' },
-        ],
-        { duration: 280, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-      );
-    });
-  }
-}
-
 // Initialize landing page
 function initLanding() {
   loadAndRenderStats();
   loadAndRenderProperties();
   initHeroSearch();
   initNewsletter();
-  initVideoButton();
 }
 
 // Auto-initialize when DOM is ready
