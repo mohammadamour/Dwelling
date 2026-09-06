@@ -73,6 +73,24 @@ function renderNavbar() {
 }
 
 /**
+ * Show/hide auth-conditional footer links based on session state.
+ * Elements with [data-auth-only] appear for any logged-in user.
+ * Elements with [data-agent-only] appear only for users with role AGENT.
+ */
+function renderFooterAuth() {
+  const isLoggedIn = isAuthenticated();
+  const user = isLoggedIn ? getAuthUser() : null;
+  const isAgent = user && user.role === 'AGENT';
+
+  $$('[data-auth-only]').forEach((el) => {
+    el.style.display = isLoggedIn ? '' : 'none';
+  });
+  $$('[data-agent-only]').forEach((el) => {
+    el.style.display = isAgent ? '' : 'none';
+  });
+}
+
+/**
  * Mobile drawer functionality
  */
 function initMobileDrawer() {
@@ -363,6 +381,7 @@ function renderPropertyCard(p, idx, options = {}) {
  */
 function initShared() {
   renderNavbar();
+  renderFooterAuth();
   initMobileDrawer();
   initScrollState();
   initSmoothScroll();
@@ -385,6 +404,7 @@ export {
   tagForProperty,
   renderPropertyCard,
   renderNavbar,
+  renderFooterAuth,
   initMobileDrawer,
   initScrollState,
   initSmoothScroll,

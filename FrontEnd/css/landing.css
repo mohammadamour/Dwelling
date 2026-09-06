@@ -1070,28 +1070,12 @@ body.drawer-open {
   margin-bottom: var(--s-5);
   line-height: 1.6;
 }
+.footer__note {
+  font-style: italic;
+  opacity: 0.65;
+}
 
-.newsletter {
-  display: flex;
-  gap: var(--s-2);
-}
-.newsletter input {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  font-size: var(--fs-sm);
-  border: 1px solid hsl(0 0% 100% / 0.1);
-  border-radius: var(--r-md);
-  background: hsl(0 0% 100% / 0.05);
-  color: #fff;
-}
-.newsletter input::placeholder {
-  color: hsl(210 40% 96% / 0.5);
-}
-.newsletter input:focus {
-  outline: none;
-  border-color: var(--c-primary);
-  background: hsl(0 0% 100% / 0.1);
-}
+
 
 .footer__links {
   display: grid;
@@ -1148,6 +1132,13 @@ body.drawer-open {
 .socials img {
   width: 20px;
   height: 20px;
+}
+.socials a svg {
+  color: hsl(210 40% 96% / 0.75);
+  transition: color var(--t-base);
+}
+.socials a:hover svg {
+  color: #fff;
 }
 
 .footer__credit {
