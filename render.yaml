@@ -44,6 +44,9 @@ services:
       # Reverse proxy /api calls to the backend API service (eliminates CORS and relative 404s)
       - type: rewrite
         source: /api/*
+        # WARNING: This destination URL is hardcoded. If 'dwelling-api' is taken 
+        # on Render and you are assigned a suffix (e.g., dwelling-api-abc.onrender.com), 
+        # you MUST manually update this destination to match your API service URL.
         destination: https://dwelling-api.onrender.com/api/*
       # Clean URL rewrites for subpages (e.g. /pages/login -> /pages/login.html)
       - type: rewrite

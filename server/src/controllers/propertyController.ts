@@ -754,14 +754,8 @@ export const deleteProperty = async (req: any, res: Response) => {
       return res.status(403).json({ error: 'Forbidden: You are not authorized to delete this listing' });
     }
 
-    // Cascade-delete dependent records to avoid FK constraint violations, then remove the property
-    await prisma.$transaction([
-      prisma.review.deleteMany({ where: { propertyId } }),
-      prisma.favorite.deleteMany({ where: { propertyId } }),
-      prisma.tourBooking.deleteMany({ where: { propertyId } }),
-      prisma.propertyImage.deleteMany({ where: { propertyId } }),
-      prisma.property.delete({ where: { id: propertyId } }),
-    ]);
+    // Prisma schema handles dependent records via onDelete: Cascade
+    await prisma.property.delete({ where: { id: propertyId } });
 
     res.json({ message: `Property "${existing.title}" has been deleted successfully` });
   } catch (error: any) {
