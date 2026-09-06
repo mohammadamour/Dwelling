@@ -177,8 +177,10 @@
 }
 
 .price-card__price {
-  font-size: var(--fs-3xl);
-  font-weight: var(--fw-extrabold);
+  font-size: 3rem;
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--c-text);
   margin-bottom: var(--s-1);
 }

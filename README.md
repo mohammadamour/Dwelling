@@ -371,3 +371,18 @@ Phase 9: Agent Listing Creation Listing publish workflow • Log in as testagent
 
 Phase 10: Responsiveness & Cleanliness Mobile drawer & console health • Toggle DevTools Mobile Device view (Ctrl+Shift+M) -> verify hamburger drawer menu and single-column layout.
 • Check DevTools Console across all views: confirm 0 unhandled JavaScript exceptions and 0 broken 404 asset requests.
+
+small things to remember fixing:
+price header being too big
+search being upbelievably slow
+some images missing/not showing up
+having a default image fallback
+remove mock up video section in landing page
+stats in front end take too long to appear
+possibly seed the database with more properties
+saving a property to favorite taks too long
+fix image alignemnt in one of the near end sections in the landing page
+find what to do with footer links
+find what to do with contact us button (possibly remove it)
+listing a property, checking profile take unnecessarily long
+fix search and thoroughly test it

@@ -662,9 +662,9 @@ export const updateProperty = async (req: any, res: Response) => {
     }
 
     if (status !== undefined) {
-      const validStatuses = ['ACTIVE', 'PENDING', 'SOLD', 'RENTED', 'INACTIVE'];
+      const validStatuses = ['AVAILABLE', 'PENDING', 'SOLD'];
       if (!validStatuses.includes(status)) {
-        return res.status(400).json({ error: 'Invalid status value' });
+        return res.status(400).json({ error: 'Status must be AVAILABLE, PENDING, or SOLD' });
       }
       updateData.status = status;
     }
