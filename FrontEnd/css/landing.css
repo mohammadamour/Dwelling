@@ -1004,30 +1004,19 @@ body.drawer-open {
 }
 
 .cta__media {
-  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s-4);
   max-width: 520px;
   width: 100%;
   margin-inline: auto;
 }
 .cta__img {
+  width: 100%;
+  height: auto;
   border-radius: var(--r-xl);
-  position: absolute;
   box-shadow: var(--sh-lg);
   object-fit: cover;
-}
-.cta__img--1 {
-  width: 85%;
-  aspect-ratio: 4 / 5;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-.cta__img--2 {
-  width: 60%;
-  aspect-ratio: 3 / 4;
-  bottom: -10%;
-  right: 0;
-  z-index: 2;
 }
 
 .cta__content h2 {
