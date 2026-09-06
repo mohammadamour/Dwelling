@@ -1,4 +1,4 @@
-import { PrismaClient, PropertyType, PriceType, PropertyStatus, Role } from '@prisma/client';
+import { PrismaClient, PropertyType, PriceType, PropertyStatus, Role, TourType, TourStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker';
 import { seedPropertyReviews } from './factories/reviewFactory';
@@ -33,16 +33,18 @@ type PropertyInput = {
 };
 
 const US_CITIES = [
-  { city: 'New York', state: 'NY', lat: 40.7128, lng: -74.0060 },
-  { city: 'Los Angeles', state: 'CA', lat: 34.0522, lng: -118.2437 },
-  { city: 'Chicago', state: 'IL', lat: 41.8781, lng: -87.6298 },
-  { city: 'Houston', state: 'TX', lat: 29.7604, lng: -95.3698 },
-  { city: 'Phoenix', state: 'AZ', lat: 33.4484, lng: -112.0740 },
-  { city: 'Miami', state: 'FL', lat: 25.7617, lng: -80.1918 },
-  { city: 'Seattle', state: 'WA', lat: 47.6062, lng: -122.3321 },
-  { city: 'Denver', state: 'CO', lat: 39.7392, lng: -104.9903 },
-  { city: 'Boston', state: 'MA', lat: 42.3601, lng: -71.0589 },
-  { city: 'Atlanta', state: 'GA', lat: 33.4484, lng: -84.3917 },
+  { city: 'New York',      state: 'NY', lat: 40.7128, lng: -74.0060  },
+  { city: 'Los Angeles',   state: 'CA', lat: 34.0522, lng: -118.2437 },
+  { city: 'Chicago',       state: 'IL', lat: 41.8781, lng: -87.6298  },
+  { city: 'Houston',       state: 'TX', lat: 29.7604, lng: -95.3698  },
+  { city: 'Phoenix',       state: 'AZ', lat: 33.4484, lng: -112.0740 },
+  { city: 'Miami',         state: 'FL', lat: 25.7617, lng: -80.1918  },
+  { city: 'Seattle',       state: 'WA', lat: 47.6062, lng: -122.3321 },
+  { city: 'Denver',        state: 'CO', lat: 39.7392, lng: -104.9903 },
+  { city: 'Boston',        state: 'MA', lat: 42.3601, lng: -71.0589  },
+  { city: 'Atlanta',       state: 'GA', lat: 33.7490, lng: -84.3917  },
+  { city: 'San Francisco', state: 'CA', lat: 37.7749, lng: -122.4194 },
+  { city: 'Nashville',     state: 'TN', lat: 36.1627, lng: -86.7816  },
 ];
 
 const UNSPLASH_IMAGES = [
@@ -71,10 +73,16 @@ const UNSPLASH_IMAGES = [
   'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1200',
   'https://images.unsplash.com/photo-1600566753151-384129cf4e3e?w=1200',
   'https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?w=1200',
+  'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?w=1200',
+  'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1200',
+  'https://images.unsplash.com/photo-1416331108676-a22ccb276e35?w=1200',
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200',
+  'https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=1200',
 ];
 
-function makeSlug(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+function makeSlug(s: string, index: number): string {
+  const base = s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return `${base}-${index}`;
 }
 
 function getRandomImages(count: number): SeedImage[] {
@@ -90,11 +98,15 @@ function generateProperty(index: number, agentId: string): PropertyInput {
   const cityData = US_CITIES[index % US_CITIES.length];
   const propertyTypes: PropertyType[] = [PropertyType.HOUSE, PropertyType.APT, PropertyType.CONDO, PropertyType.TOWNHOUSE];
   const priceTypes: PriceType[] = [PriceType.SALE, PriceType.RENT];
-  const statuses: PropertyStatus[] = [PropertyStatus.AVAILABLE, PropertyStatus.PENDING, PropertyStatus.SOLD];
-  
+  // Weighted status: 70% AVAILABLE, 18% PENDING, 12% SOLD
+  const statusRoll = Math.random();
+  const status: PropertyStatus =
+    statusRoll < 0.70 ? PropertyStatus.AVAILABLE :
+    statusRoll < 0.88 ? PropertyStatus.PENDING :
+    PropertyStatus.SOLD;
+
   const type = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
   const priceType = priceTypes[Math.floor(Math.random() * priceTypes.length)];
-  const status = statuses[Math.floor(Math.random() * statuses.length)];
   
   const isSale = priceType === PriceType.SALE;
   const basePrice = isSale ? faker.number.int({ min: 150000, max: 1500000 }) : faker.number.int({ min: 800, max: 5000 });
@@ -109,6 +121,8 @@ function generateProperty(index: number, agentId: string): PropertyInput {
     `Stunning ${type.toLowerCase()} in ${cityData.city}`,
     `${beds}BR ${type.toLowerCase()} in ${cityData.city}`,
     `Luxury ${type.toLowerCase()} in ${cityData.city}`,
+    `Charming ${type.toLowerCase()} near downtown ${cityData.city}`,
+    `Spacious ${type.toLowerCase()} in ${cityData.city}`,
   ]);
 
   const builtYear = faker.number.int({ min: 1990, max: 2024 });
@@ -146,7 +160,7 @@ function generateProperty(index: number, agentId: string): PropertyInput {
     lng: cityData.lng + (Math.random() - 0.5) * 0.1,
     type,
     status,
-    featured: index < 5,
+    featured: index < 6, // first 6 are featured (2 desktop rows of 3)
     builtYear,
     petFriendly,
     hasParking,
@@ -345,95 +359,126 @@ async function main() {
 
   const agents = [user3, ...createdAgents];
 
-  console.log('   • Generating 18 properties with varied data...');
-  const properties: PropertyInput[] = [];
-  for (let i = 0; i < 18; i++) {
+  // Generate 50 properties in memory
+  const PROPERTY_COUNT = 50;
+  console.log(`   • Generating ${PROPERTY_COUNT} properties in memory...`);
+  const properties: (PropertyInput & { agentId: string })[] = [];
+  for (let i = 0; i < PROPERTY_COUNT; i++) {
     const agentId = agents[i % agents.length].id;
     const property = generateProperty(i, agentId);
-    properties.push(property);
+    property.slug = makeSlug(property.title, i);
+    properties.push({ ...property, agentId });
   }
 
-  properties.forEach((p) => {
-    p.slug = makeSlug(p.title);
+  // Batch insert properties — 1 round-trip instead of 50
+  console.log(`   • Batch inserting ${PROPERTY_COUNT} property records (createMany)...`);
+  await prisma.property.createMany({
+    data: properties.map((p) => ({
+      title: p.title, slug: p.slug, description: p.description,
+      price: p.price, priceType: p.priceType,
+      beds: p.beds, baths: p.baths, sqft: p.sqft,
+      address: p.address, city: p.city, state: p.state, zip: p.zip,
+      lat: p.lat, lng: p.lng, type: p.type, status: p.status,
+      featured: p.featured, builtYear: p.builtYear,
+      petFriendly: p.petFriendly, hasParking: p.hasParking,
+      agentId: p.agentId,
+    })),
   });
 
-  console.log('   • Inserting properties with images...');
-  for (let i = 0; i < properties.length; i++) {
-    const p = properties[i];
-    const agentId = agents[i % agents.length].id;
-    
-    await prisma.property.create({
-      data: {
-        title: p.title,
-        slug: p.slug,
-        description: p.description,
-        price: p.price,
-        priceType: p.priceType,
-        beds: p.beds,
-        baths: p.baths,
-        sqft: p.sqft,
-        address: p.address,
-        city: p.city,
-        state: p.state,
-        zip: p.zip,
-        lat: p.lat,
-        lng: p.lng,
-        type: p.type,
-        status: p.status,
-        featured: p.featured,
-        builtYear: p.builtYear,
-        petFriendly: p.petFriendly,
-        hasParking: p.hasParking,
-        agentId,
-        images: {
-          create: p.images.map((img, idx) => ({
-            url: img.url,
-            altText: img.altText,
-            sortOrder: idx,
-            isPrimary: !!img.isPrimary,
-          })),
-        },
-      },
-    });
-  }
+  // Fetch inserted IDs, then batch insert all images — 1 round-trip
+  console.log('   • Fetching inserted property IDs...');
+  const insertedProperties = await prisma.property.findMany({
+    select: { id: true, slug: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  const slugToId = new Map(insertedProperties.map((p) => [p.slug, p.id]));
 
-  console.log('   • Adding sample favorites...');
-  const allProps = await prisma.property.findMany({ take: 5 });
-  
-  if (allProps[0]) {
-    await prisma.favorite.create({ data: { userId: user1.id, propertyId: allProps[0].id } });
-  }
-  if (allProps[1]) {
-    await prisma.favorite.create({ data: { userId: user1.id, propertyId: allProps[1].id } });
-  }
-  if (allProps[2]) {
-    await prisma.favorite.create({ data: { userId: user2.id, propertyId: allProps[2].id } });
-  }
+  const allImages = properties.flatMap((p) => {
+    const propertyId = slugToId.get(p.slug);
+    if (!propertyId) return [];
+    return p.images.map((img, idx) => ({
+      propertyId, url: img.url, altText: img.altText,
+      sortOrder: idx, isPrimary: !!img.isPrimary,
+    }));
+  });
 
-  // Seed 2 to 5 realistic reviews per property using the Review Factory
-  await seedPropertyReviews(prisma);
+  console.log(`   • Batch inserting ${allImages.length} property images (createMany)...`);
+  await prisma.propertyImage.createMany({ data: allImages });
+
+  console.log('   • Adding sample favorites (createMany)...');
+  const allProps = insertedProperties;
+  const favoriteData = [
+    { userId: user1.id, propertyId: slugToId.get(allProps[0]?.slug ?? '')! },
+    { userId: user1.id, propertyId: slugToId.get(allProps[1]?.slug ?? '')! },
+    { userId: user2.id, propertyId: slugToId.get(allProps[2]?.slug ?? '')! },
+    { userId: user1.id, propertyId: slugToId.get(allProps[3]?.slug ?? '')! },
+    { userId: user2.id, propertyId: slugToId.get(allProps[4]?.slug ?? '')! },
+  ].filter((f) => f.propertyId);
+  await prisma.favorite.createMany({ data: favoriteData });
+
+  // Seed 15 tour bookings — single createMany round-trip
+  console.log('   • Seeding 15 tour bookings (createMany)...');
+  const seekers = [user1, user2];
+  const tourTypesList = [TourType.IN_PERSON, TourType.VIRTUAL];
+  const statusWheel = [
+    TourStatus.REQUESTED, TourStatus.REQUESTED, TourStatus.REQUESTED,
+    TourStatus.CONFIRMED, TourStatus.CONFIRMED,
+    TourStatus.COMPLETED, TourStatus.COMPLETED, TourStatus.COMPLETED, TourStatus.COMPLETED,
+    TourStatus.CANCELLED,
+  ];
+  const sampleNotes = [
+    'Please allow access through the side gate.',
+    'We have a dog, can we bring it along?',
+    'Interested in the basement storage options.',
+    'Looking for a quick close if the price is right.',
+    'Would love to see the attic space as well.',
+    null, null,
+  ];
+  const tourBookingsData = Array.from({ length: 15 }, (_, i) => {
+    const seeker = seekers[i % seekers.length];
+    const prop = allProps[i % allProps.length];
+    const propertyId = slugToId.get(prop.slug)!;
+    const daysOffset = faker.number.int({ min: -30, max: 60 });
+    const tourDate = new Date();
+    tourDate.setDate(tourDate.getDate() + daysOffset);
+    tourDate.setHours(faker.number.int({ min: 9, max: 17 }), 0, 0, 0);
+    return {
+      propertyId, userId: seeker.id, tourDate,
+      tourType: tourTypesList[i % tourTypesList.length],
+      status: statusWheel[i % statusWheel.length],
+      notes: sampleNotes[i % sampleNotes.length],
+    };
+  });
+  await prisma.tourBooking.createMany({ data: tourBookingsData });
+
+  // Seed 2 to 5 realistic reviews per property using the Review Factory (already uses createMany)
+  const reviewStats = await seedPropertyReviews(prisma);
 
   await prisma.newsletterSubscriber.createMany({
-    data: Array.from({ length: 5 }, () => ({
+    data: Array.from({ length: 8 }, () => ({
       email: faker.internet.email(),
       sourcePage: faker.helpers.arrayElement(['home', 'about', 'properties']),
     })),
   });
 
+  const featuredCount = properties.filter((p) => p.featured).length;
+  const cities = [...new Set(properties.map((p) => p.city))];
+
   console.log('\n✅ Seed complete!');
-  console.log(`   Test Users: 3 (password: password123)`);
-  console.log(`   Agents: ${agents.length + 1}`);
-  console.log(`   Properties: ${properties.length}`);
-  console.log(`   Featured: ${properties.filter(p => p.featured).length}`);
-  console.log(`   Cities: ${[...new Set(properties.map(p => p.city))].join(', ')}`);
-  if (allProps[0]) {
-    console.log(`   Sample property: /api/properties/${allProps[0].id}`);
-  }
-  console.log('   Stats endpoint:  /api/properties/stats');
+  console.log(`   Seekers:       2 (password: password123)`);
+  console.log(`   Agents:        ${agents.length}`);
+  console.log(`   Properties:    ${PROPERTY_COUNT}`);
+  console.log(`   Featured:      ${featuredCount}`);
+  console.log(`   Images:        ${allImages.length}`);
+  console.log(`   Cities:        ${cities.join(', ')}`);
+  console.log(`   Tour Bookings: ${tourBookingsData.length}`);
+  console.log(`   Reviews:       ${reviewStats.totalReviewsCreated} (avg ${reviewStats.averageRating}★)`);
+  console.log(`   Subscribers:   8`);
+  console.log('   Stats endpoint: /api/properties/stats');
   console.log('\n📝 Test Credentials:');
-  console.log('   User: testuser1@example.com / password123');
-  console.log('   User: testuser2@example.com / password123');
-  console.log('   Agent: testagent@example.com / password123');
+  console.log('   Seeker: testuser1@example.com / password123');
+  console.log('   Seeker: testuser2@example.com / password123');
+  console.log('   Agent:  testagent@example.com / password123');
 }
 
 main()
