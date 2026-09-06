@@ -25,6 +25,7 @@ app.set('trust proxy', 1);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   frameguard: { action: 'deny' },
+  contentSecurityPolicy: false,
 }));
 
 // Security: Dynamic CORS configuration based on environment variables
@@ -37,6 +38,11 @@ app.use(cors({
 
     // Whitelist check
     if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Automatically allow deployed Render domains (prevents CORS lockout from misconfigured env vars)
+    if (/^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin)) {
       return callback(null, true);
     }
 
@@ -53,11 +59,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-// Root health check
-app.get('/', (_req, res) => {
-  res.json({ status: 'ok', message: 'Dwelling API is running' });
-});
 
 // API Rate Limiting: General blanket protection for all /api endpoints
 app.use('/api', generalApiLimiter);
@@ -93,45 +94,73 @@ app.post('/api/newsletter', newsletterLimiter, async (req, res) => {
   }
 });
 
-// Health check
+// Health check (used by Render)
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Dwelling API is running' });
 });
 
-// Optional Single-Service Deployment (Option B):
-// When SERVE_FRONTEND is set to 'true', Express serves the static frontend directly with clean URLs
-if (process.env.SERVE_FRONTEND === 'true') {
-  const candidatePaths = [
-    path.resolve(__dirname, '../../FrontEnd'),
-    path.resolve(__dirname, '../../../FrontEnd'),
-    path.resolve(process.cwd(), '../FrontEnd'),
-    path.resolve(process.cwd(), 'FrontEnd'),
-  ];
-  const frontEndPath = candidatePaths.find((p) => fs.existsSync(p));
-  if (frontEndPath) {
-    app.use(express.static(frontEndPath));
+// Frontend Static & Page Route Handling
+const candidatePaths = [
+  path.resolve(__dirname, '../../../FrontEnd'),
+  path.resolve(__dirname, '../../FrontEnd'),
+  path.resolve(process.cwd(), '../FrontEnd'),
+  path.resolve(process.cwd(), 'FrontEnd'),
+];
+const frontEndPath = candidatePaths.find((p) => fs.existsSync(p));
 
-    app.get('/pages/:page', (req, res, next) => {
-      const pageFile = path.join(frontEndPath, 'pages', `${req.params.page}.html`);
+if (frontEndPath) {
+  // Serve static assets (CSS, JS, images)
+  app.use(express.static(frontEndPath));
+
+  // Root route: serve index.html
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(frontEndPath, 'index.html'));
+  });
+
+  // Top-level clean page URLs (e.g. /login -> /pages/login.html)
+  const topLevelPages = ['login', 'register', 'properties', 'property-details', 'profile', 'add-property'];
+  topLevelPages.forEach((page) => {
+    app.get(`/${page}`, (_req, res) => {
+      const pageFile = path.join(frontEndPath, 'pages', `${page}.html`);
       if (fs.existsSync(pageFile)) {
         return res.sendFile(pageFile);
       }
-      next();
+      res.redirect('/');
     });
+  });
 
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api')) return next();
-      const indexFile = path.join(frontEndPath, 'index.html');
-      if (fs.existsSync(indexFile)) {
-        return res.sendFile(indexFile);
-      }
-      next();
-    });
-  }
+  // Pages subdirectory clean URLs (e.g. /pages/login -> /pages/login.html)
+  app.get('/pages/:page', (req, res, next) => {
+    const pageName = req.params.page.replace(/\.html$/, '');
+    const pageFile = path.join(frontEndPath, 'pages', `${pageName}.html`);
+    if (fs.existsSync(pageFile)) {
+      return res.sendFile(pageFile);
+    }
+    next();
+  });
+
+  // Fallback for non-API routes: serve index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(frontEndPath, 'index.html'));
+  });
+} else {
+  // Standalone API root fallback if FrontEnd directory is absent
+  app.get('/', (_req, res) => {
+    res.json({ status: 'ok', message: 'Dwelling API is running' });
+  });
 }
 
-// 404 handler
+// 404 handler for API routes
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// General 404 fallback
 app.use((_req, res) => {
+  if (frontEndPath) {
+    return res.sendFile(path.join(frontEndPath, 'index.html'));
+  }
   res.status(404).json({ error: 'Route not found' });
 });
 
