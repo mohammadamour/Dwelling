@@ -41,13 +41,25 @@ services:
     rootDir: FrontEnd
     publishPath: .
     routes:
-      # Reverse proxy /api calls to the backend API service (eliminates CORS and relative 404s)
+      # Clean URL rewrites for top-level paths (e.g. /login -> /pages/login.html)
       - type: rewrite
-        source: /api/*
-        # WARNING: This destination URL is hardcoded. If 'dwelling-api' is taken 
-        # on Render and you are assigned a suffix (e.g., dwelling-api-abc.onrender.com), 
-        # you MUST manually update this destination to match your API service URL.
-        destination: https://dwelling-api.onrender.com/api/*
+        source: /login
+        destination: /pages/login.html
+      - type: rewrite
+        source: /register
+        destination: /pages/register.html
+      - type: rewrite
+        source: /properties
+        destination: /pages/properties.html
+      - type: rewrite
+        source: /property-details
+        destination: /pages/property-details.html
+      - type: rewrite
+        source: /profile
+        destination: /pages/profile.html
+      - type: rewrite
+        source: /add-property
+        destination: /pages/add-property.html
       # Clean URL rewrites for subpages (e.g. /pages/login -> /pages/login.html)
       - type: rewrite
         source: /pages/login

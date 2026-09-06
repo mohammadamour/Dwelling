@@ -386,3 +386,6 @@ find what to do with footer links
 find what to do with contact us button (possibly remove it)
 listing a property, checking profile take unnecessarily long
 fix search and thoroughly test it
+
+If Render gives you https://dwelling-api.onrender.com: You're golden. Everything will work out of the box.
+If Render says the name is taken and gives you a URL with a custom suffix (like https://dwelling-api-abc.onrender.com): Just update `productionApiUrl` in `FrontEnd/js/config.js` to match your new API URL, commit, and push.

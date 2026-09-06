@@ -18,11 +18,11 @@
 export const DWELLING_CONFIG = {
   /**
    * Explicit production API base URL.
-   * If your backend is deployed to a standalone external domain (e.g. 'https://api.dwelling.com/api'
-   * or 'https://dwelling-api.onrender.com/api'), set it here or provide it via HTML meta tag / window global.
-   * If left empty, public environments automatically default to relative '/api'.
+   * If your backend is deployed to Render (e.g. 'https://dwelling-api.onrender.com/api'),
+   * set it here. If Render assigns a customized suffix (e.g. dwelling-api-abc.onrender.com),
+   * update this URL accordingly.
    */
-  productionApiUrl: '',
+  productionApiUrl: 'https://dwelling-api.onrender.com/api',
 
   /**
    * Local development API base URL fallback.
@@ -85,17 +85,17 @@ export function resolveApiBaseUrl() {
     // Storage access might be restricted by browser sandbox
   }
 
-  // 4. Explicit production URL from config object
-  if (typeof DWELLING_CONFIG.productionApiUrl === 'string' && DWELLING_CONFIG.productionApiUrl.trim()) {
-    return DWELLING_CONFIG.productionApiUrl.trim();
-  }
-
-  // 5. Intelligent Environment Auto-Detection
+  // 4. Intelligent Local Development Detection (preserve localhost:5001 during local testing)
   if (isLocalhost()) {
     return DWELLING_CONFIG.developmentApiUrl;
   }
 
-  // Remote production host fallback: use relative '/api'
+  // 5. Explicit production URL from config object
+  if (typeof DWELLING_CONFIG.productionApiUrl === 'string' && DWELLING_CONFIG.productionApiUrl.trim()) {
+    return DWELLING_CONFIG.productionApiUrl.trim();
+  }
+
+  // 6. Remote production host fallback: use relative '/api'
   // Avoids contacting the visitor's local machine and works seamlessly with reverse proxies/rewrites
   return '/api';
 }
