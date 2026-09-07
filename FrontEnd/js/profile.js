@@ -17,7 +17,7 @@ import {
   updateTourStatus,
   toggleFavorite,
 } from './api.js';
-import { $, $$, fmtCurrency } from './shared.js';
+import { $, $$, fmtCurrency, optimizeImageUrl } from './shared.js';
 
 // ─── Profile loader ───────────────────────────────────────────────────────────
 
@@ -128,13 +128,16 @@ async function loadUserTours() {
         CANCELLED:  { bg: '#F3F4F6', text: '#6B7280' },
       };
       const badge  = statusColors[tour.status] || { bg: '#E2E8F0', text: '#334155' };
-      const imgUrl = tour.property?.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
+      const images = tour.property?.images || [];
+      const imageUrls = images.map(i => i.url).filter(Boolean).map(url => optimizeImageUrl(url, 200));
+      const imgUrl = imageUrls.length > 0 ? imageUrls[0] : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
+      const fallbacksStr = imageUrls.length > 1 ? JSON.stringify(imageUrls.slice(1)).replace(/"/g, '&quot;') : '[]';
       const canCancel = tour.status === 'REQUESTED' || tour.status === 'CONFIRMED';
 
       return `
         <div class="tour-card" data-tour-id="${tour.id}" style="display: flex; justify-content: space-between; align-items: center; padding: var(--s-3); background: var(--c-bg); border-radius: var(--radius-lg); border: 1px solid var(--c-border); flex-wrap: wrap; gap: var(--s-3);">
           <div style="display: flex; align-items: center; gap: var(--s-3);">
-            <img src="${imgUrl}" alt="${tour.property?.title || 'Property'}" style="width: 72px; height: 54px; object-fit: cover; border-radius: var(--radius-md);" />
+            <img src="${imgUrl}" alt="${tour.property?.title || 'Property'}" data-fallbacks="${fallbacksStr}" onerror="window.handleImageFallback(this)" style="width: 72px; height: 54px; object-fit: cover; border-radius: var(--radius-md);" />
             <div>
               <a href="property-details.html?id=${tour.propertyId}" style="font-weight: 700; color: var(--c-text); text-decoration: none;">${tour.property?.title || 'Property Listing'}</a>
               <p style="font-size: var(--text-xs); color: var(--c-muted); margin: 2px 0 0;">📍 ${tour.property?.city || 'Unknown City'} • ${tour.tourType === 'VIRTUAL' ? '💻 Virtual Video Walkthrough' : '🚶 In-Person Visit'}</p>
@@ -192,13 +195,16 @@ async function loadUserFavorites() {
     }
 
     favList.innerHTML = favorites.map((p) => {
-      const imgUrl         = p.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22160%22/%3E';
+      const images = p.images || [];
+      const imageUrls = images.map(i => i.url).filter(Boolean).map(url => optimizeImageUrl(url, 400));
+      const imgUrl = imageUrls.length > 0 ? imageUrls[0] : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22160%22/%3E';
+      const fallbacksStr = imageUrls.length > 1 ? JSON.stringify(imageUrls.slice(1)).replace(/"/g, '&quot;') : '[]';
       const formattedPrice = fmtCurrency(p.price) + (p.priceType === 'RENT' ? '/mo' : '');
 
       return `
         <div class="fav-card" style="background: var(--c-bg); border-radius: var(--radius-lg); border: 1px solid var(--c-border); overflow: hidden; display: flex; flex-direction: column;">
           <a href="property-details.html?id=${p.id}" style="display: block; position: relative;">
-            <img src="${imgUrl}" alt="${p.title}" style="width: 100%; height: 140px; object-fit: cover;" />
+            <img src="${imgUrl}" alt="${p.title}" data-fallbacks="${fallbacksStr}" onerror="window.handleImageFallback(this)" style="width: 100%; height: 140px; object-fit: cover;" />
           </a>
           <div style="padding: var(--s-3); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
@@ -271,7 +277,10 @@ async function loadUserListings() {
     }
 
     list.innerHTML = listings.map((p) => {
-      const imgUrl         = p.images?.[0]?.url || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
+      const images = p.images || [];
+      const imageUrls = images.map(i => i.url).filter(Boolean).map(url => optimizeImageUrl(url, 200));
+      const imgUrl = imageUrls.length > 0 ? imageUrls[0] : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2270%22/%3E';
+      const fallbacksStr = imageUrls.length > 1 ? JSON.stringify(imageUrls.slice(1)).replace(/"/g, '&quot;') : '[]';
       const formattedPrice = fmtCurrency(p.price) + (p.priceType === 'RENT' ? '/mo' : '');
       const statusKey      = p.status || 'ACTIVE';
       const badge          = STATUS_BADGE[statusKey] || STATUS_BADGE.ACTIVE;
@@ -285,9 +294,7 @@ async function loadUserListings() {
 
           <!-- Thumbnail -->
           <a href="property-details.html?id=${p.id}" style="flex-shrink: 0;">
-            <img src="${imgUrl}" alt="${p.title}"
-                 style="width: 100px; height: 72px; object-fit: cover; border-radius: var(--radius-md);"
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2272%22/%3E'" />
+            <img src="${imgUrl}" alt="${p.title}" data-fallbacks="${fallbacksStr}" onerror="window.handleImageFallback(this)" style="width: 100px; height: 72px; object-fit: cover; border-radius: var(--radius-md);" />
           </a>
 
           <!-- Info -->

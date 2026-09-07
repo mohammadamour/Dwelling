@@ -59,6 +59,7 @@ export const PROPERTY_CARD_SELECT = {
       sortOrder: true,
     },
     orderBy: { sortOrder: 'asc' as const },
+    take: 3,
   },
   agent: {
     select: {

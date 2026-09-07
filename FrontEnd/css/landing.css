@@ -539,8 +539,8 @@ body.drawer-open {
   transform: translateX(20px);
   background: var(--c-surface);
   border-radius: var(--r-xl);
-  padding: var(--s-4) var(--s-5);
-  width: min(230px, 70%);
+  padding: var(--s-5) var(--s-4);
+  width: min(220px, 70%);
   box-shadow: var(--sh-lg);
   border: 1px solid var(--c-border);
   text-align: center;
@@ -557,11 +557,18 @@ body.drawer-open {
   font-weight: var(--fw-bold);
   color: var(--c-text);
   font-size: 0.95rem;
+  line-height: 1.3;
+}
+.about__media .agent-card__name {
+  margin-bottom: 2px;
 }
 .agent-card__role {
   color: var(--c-muted);
   font-size: 12.5px;
   margin-bottom: var(--s-3);
+}
+.about__media .agent-card__role {
+  margin-bottom: var(--s-2);
 }
 .agent-card__rating {
   display: inline-flex;
@@ -571,6 +578,9 @@ body.drawer-open {
   font-weight: var(--fw-semibold);
   font-size: var(--fs-xs);
   margin-bottom: var(--s-3);
+}
+.about__media .agent-card__rating {
+  margin-bottom: 0;
 }
 .agent-card__rating span {
   color: var(--c-text);

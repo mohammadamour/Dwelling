@@ -272,6 +272,49 @@ function tagForProperty(p, idx) {
 }
 
 /**
+ * Optimizes an image URL for display by reducing size parameters.
+ */
+export function optimizeImageUrl(url, width = 600) {
+  if (!url || typeof url !== 'string') return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes('unsplash.com')) {
+      parsed.searchParams.set('w', width.toString());
+      parsed.searchParams.set('q', '70');
+      parsed.searchParams.set('auto', 'format');
+      return parsed.toString();
+    }
+    if (parsed.pathname.includes('/storage/v1/render/image/public/')) {
+      parsed.searchParams.set('width', width.toString());
+      parsed.searchParams.set('quality', '70');
+      return parsed.toString();
+    }
+    return url;
+  } catch (e) {
+    return url;
+  }
+}
+
+/**
+ * Handles image fallback cascade on error.
+ */
+window.handleImageFallback = function(imgElement) {
+  let fallbacks = [];
+  try { fallbacks = JSON.parse(imgElement.dataset.fallbacks || '[]'); } catch(e){}
+  if (fallbacks.length > 0) {
+    imgElement.src = fallbacks.shift();
+    imgElement.dataset.fallbacks = JSON.stringify(fallbacks);
+  } else {
+    imgElement.onerror = null;
+    imgElement.style.opacity = 0.15;
+    imgElement.style.background = 'linear-gradient(135deg,#e2e8f0,#cbd5e1)';
+    if (!imgElement.src.startsWith('data:image/svg')) {
+      imgElement.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
+    }
+  }
+};
+
+/**
  * Creates and returns an interactive property card DOM element.
  * Shared across landing and catalog pages to eliminate duplicated markup.
  * @param {Object} p - Property entity
@@ -283,11 +326,13 @@ function renderPropertyCard(p, idx, options = {}) {
   const primaryImg =
     (p.images && p.images.find((i) => i.isPrimary)) ||
     (p.images && p.images[0]);
-  const rawUrl = typeof primaryImg === 'string' ? primaryImg : primaryImg?.url;
-  const imgUrl =
-    rawUrl && rawUrl.trim()
-      ? rawUrl.trim()
-      : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
+    
+  const sortedImages = p.images ? [...p.images].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0)) : [];
+  const imageUrls = sortedImages.map(i => typeof i === 'string' ? i : i?.url).filter(Boolean).map(url => optimizeImageUrl(url, 400));
+  
+  const imgUrl = imageUrls.length > 0 ? imageUrls[0] : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22260%22/%3E';
+  const fallbacksStr = imageUrls.length > 1 ? JSON.stringify(imageUrls.slice(1)).replace(/"/g, '&quot;') : '[]';
+
   const imgAlt = (typeof primaryImg === 'object' && primaryImg?.altText) || p.title || 'Property image';
   const priceLabel =
     p.priceType === 'RENT'
@@ -333,7 +378,9 @@ function renderPropertyCard(p, idx, options = {}) {
     imgUrl +
     '" alt="' +
     imgAlt +
-    '" loading="lazy" decoding="async" onerror="this.style.opacity=0.15;this.style.background=\'linear-gradient(135deg,#e2e8f0,#cbd5e1)\'" />' +
+    '" data-fallbacks="' +
+    fallbacksStr +
+    '" loading="lazy" decoding="async" onerror="window.handleImageFallback(this)" />' +
     '</a>' +
     tagHtml +
     '<button type="button" class="property-card__fav" data-id="' +
