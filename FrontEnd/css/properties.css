@@ -78,7 +78,7 @@
 
 /* ---------- PROPERTY GRID ---------- */
 .properties-page {
-  padding: var(--s-8) 0 var(--s-12);
+  padding-block: var(--s-8) var(--s-12);
 }
 
 .properties-page__grid {
