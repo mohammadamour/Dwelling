@@ -41,8 +41,8 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Automatically allow deployed Render domains (prevents CORS lockout from misconfigured env vars)
-    if (/^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin)) {
+    // Automatically allow deployed Vercel and Render domains (prevents CORS lockout)
+    if (/^https:\/\/[a-zA-Z0-9-]+\.vercel\.app$/.test(origin) || /^https:\/\/[a-zA-Z0-9-]+\.onrender\.com$/.test(origin)) {
       return callback(null, true);
     }
 
@@ -60,23 +60,26 @@ app.use(cors({
 
 app.use(express.json());
 
-// API Rate Limiting: General blanket protection for all /api endpoints
-app.use('/api', generalApiLimiter);
+// API Router
+const apiRouter = express.Router();
+
+// Rate Limiting on API endpoints
+apiRouter.use(generalApiLimiter);
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/properties', propertyRoutes);
-app.use('/api/favorites', favoriteRoutes);
-app.use('/api/tours', tourRoutes);
-app.use('/api/agents', agentRoutes);
-app.use('/api', statsRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/properties', propertyRoutes);
+apiRouter.use('/favorites', favoriteRoutes);
+apiRouter.use('/tours', tourRoutes);
+apiRouter.use('/agents', agentRoutes);
+apiRouter.use('/', statsRoutes);
 
 /**
- * POST /api/newsletter
+ * POST /newsletter
  * Subscribe an email to the newsletter list (throttled by newsletterLimiter)
  */
-app.post('/api/newsletter', newsletterLimiter, async (req, res) => {
+apiRouter.post('/newsletter', newsletterLimiter, async (req, res) => {
   try {
     const { email, sourcePage } = req.body || {};
     if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -94,10 +97,15 @@ app.post('/api/newsletter', newsletterLimiter, async (req, res) => {
   }
 });
 
-// Health check (used by Render)
-app.get('/api/health', (_req, res) => {
+// Health check endpoint
+apiRouter.get('/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Dwelling API is running' });
 });
+
+// Mount router under /api
+app.use('/api', apiRouter);
+// Also mount router directly at root for proxy rewrites that strip the /api prefix
+app.use(apiRouter);
 
 // Frontend Static & Page Route Handling
 const candidatePaths = [
@@ -202,7 +210,10 @@ async function startServer() {
   }
 }
 
-startServer();
+// Start server only when running as a standalone Node.js process (not inside Vercel serverless)
+if (process.env.VERCEL !== '1' && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  startServer();
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -214,3 +225,6 @@ process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+
+export { app, prisma };
+export default app;

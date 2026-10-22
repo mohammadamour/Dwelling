@@ -17,12 +17,11 @@
 
 export const DWELLING_CONFIG = {
   /**
-   * Explicit production API base URL.
-   * If your backend is deployed to Render (e.g. 'https://dwelling-api.onrender.com/api'),
-   * set it here. If Render assigns a customized suffix (e.g. dwelling-api-abc.onrender.com),
-   * update this URL accordingly.
+   * Explicit production API base URL override (optional).
+   * Defaults to empty string so deployed sites automatically use the relative '/api'
+   * endpoint, eliminating cross-origin overhead on Vercel or reverse-proxies.
    */
-  productionApiUrl: 'https://dwelling-84mu.onrender.com/api',
+  productionApiUrl: '',
 
   /**
    * Local development API base URL fallback.
