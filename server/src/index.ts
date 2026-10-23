@@ -60,8 +60,14 @@ app.use(cors({
 
 app.use(express.json());
 
-// API Request Logger for Vercel diagnostics
+// Normalize Vercel rewritten URLs and log API requests for diagnostics
 app.use((req, _res, next) => {
+  const matchedPath = (req.headers['x-matched-path'] || req.headers['x-original-url']) as string | undefined;
+  if (matchedPath && typeof matchedPath === 'string' && matchedPath.startsWith('/api')) {
+    const queryIndex = req.url.indexOf('?');
+    const queryString = queryIndex !== -1 && !matchedPath.includes('?') ? req.url.slice(queryIndex) : '';
+    req.url = `${matchedPath}${queryString}`;
+  }
   if (req.url.startsWith('/api') || req.path.startsWith('/api')) {
     console.log(`[API] ${req.method} ${req.url}`);
   }
