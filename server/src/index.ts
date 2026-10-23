@@ -60,6 +60,14 @@ app.use(cors({
 
 app.use(express.json());
 
+// API Request Logger for Vercel diagnostics
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/api') || req.path.startsWith('/api')) {
+    console.log(`[API] ${req.method} ${req.url}`);
+  }
+  next();
+});
+
 // API Router
 const apiRouter = express.Router();
 
