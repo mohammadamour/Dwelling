@@ -10,13 +10,18 @@ const sourceCandidates = [
 
 const src = sourceCandidates.find((p) => fs.existsSync(p));
 const dest = path.resolve(__dirname, 'dist/FrontEnd');
+const destAlt = path.resolve(__dirname, 'FrontEnd');
 
 if (src) {
   try {
     fs.cpSync(src, dest, { recursive: true });
-    console.log(`✅ FrontEnd successfully copied from ${src} to ${dest}`);
+    // Also copy to server/FrontEnd in case Vercel root is server and outputDirectory is FrontEnd
+    if (path.resolve(src) !== path.resolve(destAlt)) {
+      fs.cpSync(src, destAlt, { recursive: true });
+    }
+    console.log(`✅ FrontEnd successfully copied to ${dest} and ${destAlt}`);
   } catch (err) {
-    console.error('❌ Failed to copy FrontEnd assets to dist:', err);
+    console.error('❌ Failed to copy FrontEnd assets:', err);
     process.exit(1);
   }
 } else {

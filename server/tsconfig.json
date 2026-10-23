@@ -15,6 +15,6 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/**/*", "prisma/**/*"],
+  "include": ["src/**/*", "prisma/**/*", "api/**/*"],
   "exclude": ["node_modules", "dist"]
 }
